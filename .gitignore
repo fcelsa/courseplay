@@ -2,6 +2,7 @@
 *~
 *.gitattributes
 *.gitignore
+*.editorconfig
 *.idea
 *.iml
 
@@ -20,6 +21,7 @@ $RECYCLE.BIN/
 
 # Satis
 TurnRadiusCalculation.lua
+TriangleCalculation.lua
 
 # Jakob
 *.WinMerge

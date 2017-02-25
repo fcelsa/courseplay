@@ -18,7 +18,7 @@ function courseplay:setCpMode(vehicle, modeNum)
 		courseplay.utils:setOverlayUVsPx(vehicle.cp.hud.currentModeIcon, courseplay.hud.bottomInfo.modeUVsPx[modeNum], courseplay.hud.iconSpriteSize.x, courseplay.hud.iconSpriteSize.y);
 		courseplay.buttons:setActiveEnabled(vehicle, 'all');
 		if modeNum == 1 then
-			courseplay:reset_tools(vehicle);
+			courseplay:resetTools(vehicle);
 		end;
 	end;
 end;
@@ -66,6 +66,30 @@ function courseplay:getCanVehicleUseMode(vehicle, mode)
 	return true;
 end;
 
+function courseplay:toggleAutoRefuel(self)
+	self.cp.allwaysSearchFuel = not self.cp.allwaysSearchFuel 
+end
+function courseplay:toggleMode10automaticSpeed(self)
+	if self.cp.mode10.leveling then
+		self.cp.mode10.automaticSpeed = not self.cp.mode10.automaticSpeed
+	end
+end
+function courseplay:toggleMode10drivingThroughtLoading(self)
+		self.cp.mode10.drivingThroughtLoading = not self.cp.mode10.drivingThroughtLoading
+end
+
+function courseplay:toggleMode10AutomaticHeight(self)
+	self.cp.mode10.automaticHeigth = not self.cp.mode10.automaticHeigth 
+end
+
+function courseplay:toggleMode10Mode(self)
+	self.cp.mode10.leveling = not self.cp.mode10.leveling
+end
+
+function courseplay:toggleMode10SearchMode(self)
+	self.cp.mode10.searchCourseplayersOnly = not self.cp.mode10.searchCourseplayersOnly
+end
+
 function courseplay:toggleWantsCourseplayer(combine)
 	combine.cp.wantsCourseplayer = not combine.cp.wantsCourseplayer;
 end;
@@ -106,7 +130,7 @@ function courseplay:sendCourseplayerHome(combine)
 end
 
 function courseplay:switchCourseplayerSide(combine)
-	if combine.capacity == 0 then
+	if courseplay:isChopper(combine) then
 		local tractor = combine.courseplayers[1];
 		if tractor == nil then
 			return;
@@ -203,7 +227,14 @@ function courseplay:calculateWorkWidth(vehicle, noDraw)
 	local implL,implR = -9999,9999;
 	if vehicle.attachedImplements then
 		for i,implement in pairs(vehicle.attachedImplements) do
-			local workWidth = courseplay:getSpecialWorkWidth(implement.object);
+			local tool = implement.object
+			local workWidth = courseplay:getSpecialWorkWidth(tool);
+			if vehicle.cp.mode == 9 and tool.cp.hasSpecializationShovel then   
+				workWidth = tool.sizeWidth
+			end
+			if vehicle.cp.mode == 10 then
+				return
+			end
 			if workWidth then
 				courseplay:debug(('\tSpecial workWidth found: %.1fm'):format(workWidth), 7);
 				courseplay:changeWorkWidth(vehicle, nil, workWidth, noDraw);
@@ -216,8 +247,18 @@ function courseplay:calculateWorkWidth(vehicle, noDraw)
 				implR = min(implR, right);
 			end;
 			courseplay:debug(('\t-> implL=%s, implR=%s'):format(tostring(implL), tostring(implR)), 7);
-			if implement.object.attachedImplements then
-				for j,subImplement in pairs(implement.object.attachedImplements) do
+			if tool.attachedImplements then
+				for j,subImplement in pairs(tool.attachedImplements) do
+					local tool = subImplement.object;
+					if vehicle.cp.mode == 9 and tool.cp.hasSpecializationShovel then   
+						workWidth = tool.sizeWidth
+					end
+					if workWidth then
+						courseplay:debug(('\tSpecial workWidth found in attachedImplement: %.1fm'):format(workWidth), 7);
+						courseplay:changeWorkWidth(vehicle, nil, workWidth, noDraw);
+						return;
+					end;
+				
 					local subLeft, subRight = courseplay:getCuttingAreaValuesX(subImplement.object);
 					if subLeft and subRight then
 						implL = max(implL, subLeft);
@@ -306,11 +347,24 @@ function courseplay:getCuttingAreaValuesX(object)
 end;
 
 function courseplay:changeWorkWidth(vehicle, changeBy, force, noDraw)
+	local isSetManually = false
+	if force == nil and noDraw == nil then
+		--print("is set manually")
+		isSetManually = true
+	elseif force ~= nil and noDraw ~= nil then
+		--print("is set by script")
+		if not vehicle.cp.isDriving and vehicle.cp.manualWorkWidth then
+			return
+		end
+	elseif force ~= nil and noDraw == nil then
+		vehicle.cp.manualWorkWidth = nil
+		--print("is set by calculate button")
+	end
 	if force then
 		vehicle.cp.workWidth = max(courseplay:round(abs(force), 1), 0.1);
 	else
 		if vehicle.cp.workWidth + changeBy > 10 then
-			if abs(changeBy) == 0.1 then
+			if abs(changeBy) == 0.1 and not (Input.keyPressedState[Input.KEY_lalt]) then -- pressing left Alt key enables to have small 0.1 steps even over 10.0 
 				changeBy = 0.5 * Utils.sign(changeBy);
 			elseif abs(changeBy) == 0.5 then
 				changeBy = 2 * Utils.sign(changeBy);
@@ -323,6 +377,9 @@ function courseplay:changeWorkWidth(vehicle, changeBy, force, noDraw)
 			vehicle.cp.workWidth = max(vehicle.cp.workWidth + changeBy, 0.1);
 		end;
 	end;
+	if isSetManually then
+		vehicle.cp.manualWorkWidth = vehicle.cp.workWidth
+	end
 	if not noDraw then
 		courseplay:setCustomTimer(vehicle, 'showWorkWidth', 2);
 	end;
@@ -362,6 +419,13 @@ function courseplay:toggleShowVisualWaypointsCrossing(vehicle, force, visibility
 	end;
 end;
 
+function courseplay:changeMode10Radius (vehicle, changeBy)
+	vehicle.cp.mode10.searchRadius = math.max(1,vehicle.cp.mode10.searchRadius + changeBy)
+end
+
+function courseplay:changeShieldHeight (vehicle, changeBy)
+	vehicle.cp.mode10.shieldHeight = Utils.clamp(vehicle.cp.mode10.shieldHeight + changeBy,0,1.5)
+end
 
 function courseplay:changeDriveOnAtFillLevel(vehicle, changeBy)
 	vehicle.cp.driveOnAtFillLevel = Utils.clamp(vehicle.cp.driveOnAtFillLevel + changeBy, 0, 100);
@@ -426,6 +490,15 @@ function courseplay:changeReverseSpeed(vehicle, changeBy, force, forceReloadPage
 	if forceReloadPage then
 		courseplay.hud:setReloadPageOrder(vehicle, 5, true);
 	end;
+end
+function courseplay:changeBunkerSpeed(vehicle, changeBy)
+	local upperLimit = 20 
+	local speed = vehicle.cp.speeds.bunkerSilo;
+	if vehicle.cp.mode10.leveling then
+		upperLimit = 15
+	end
+	speed = Utils.clamp(speed + changeBy, 3, upperLimit);
+	vehicle.cp.speeds.bunkerSilo = speed;
 end
 
 function courseplay:toggleUseRecordingSpeed(vehicle)
@@ -928,7 +1001,7 @@ end;
 function courseplay:changeStartingDirection(vehicle)
 	-- corners: 1 = SW, 2 = NW, 3 = NE, 4 = SE
 	-- directions: 1 = North, 2 = East, 3 = South, 4 = West
-
+	local clockwise = true
 	local validDirections = {};
 	if vehicle.cp.hasStartingCorner then
 		if vehicle.cp.startingCorner == 1 then --SW
@@ -950,12 +1023,15 @@ function courseplay:changeStartingDirection(vehicle)
 			vehicle.cp.startingDirection = validDirections[1];
 		elseif vehicle.cp.startingDirection == validDirections[1] then
 			vehicle.cp.startingDirection = validDirections[2];
+			clockwise = false
 		elseif vehicle.cp.startingDirection == validDirections[2] then
 			vehicle.cp.startingDirection = validDirections[1];
 		end;
 		vehicle.cp.hasStartingDirection = true;
 	end;
-
+	if vehicle.cp.headland.userDirClockwise ~= clockwise then
+		courseplay:toggleHeadlandDirection(vehicle)
+	end
 	courseplay:validateCourseGenerationData(vehicle);
 end;
 
@@ -1065,6 +1141,18 @@ function courseplay:resetManualShovelPositionOrder(vehicle)
 	vehicle.cp.movingToolsPrimary, vehicle.cp.movingToolsSecondary = nil, nil;
 	courseplay:resetCustomTimer(vehicle, 'manualShovelPositionOrder');
 end;
+
+function courseplay:movePipeToPosition(vehicle,pos)
+	--print(string.format("%s: movePipeToPosition %s",tostring(vehicle.name),tostring(pos)))
+	vehicle.cp.manualPipePositionOrder = pos
+	courseplay:setCustomTimer(vehicle, 'manualPipePositionOrder', 12); -- backup timer: if position hasn't been set within time frame, abort
+end
+
+
+function courseplay:resetManualPipePositionOrder(vehicle)
+	vehicle.cp.manualPipePositionOrder = nil;
+	courseplay:resetCustomTimer(vehicle, 'manualPipePositionOrder');
+end
 
 function courseplay:toggleShovelStopAndGo(vehicle)
 	vehicle.cp.shovelStopAndGo = not vehicle.cp.shovelStopAndGo;
@@ -1283,16 +1371,13 @@ function courseplay:addCustomSingleFieldEdgeToList(vehicle)
 	data.areaSqm = area;
 	data.areaHa = area / 10000;
 	data.dimensions = dimensions;
-	data.fieldAreaText = courseplay:loc('COURSEPLAY_SEEDUSAGECALCULATOR_FIELD'):format(data.fieldNum, courseplay.fields:formatNumber(data.areaHa, 2), g_i18n:getText('area_unit_short'));
+	data.fieldAreaText = courseplay:loc('COURSEPLAY_SEEDUSAGECALCULATOR_FIELD'):format(data.fieldNum, courseplay.fields:formatNumber(data.areaHa, 2), g_i18n:getText('unit_areaShort'));
 	data.seedUsage, data.seedPrice, data.seedDataText = courseplay.fields:getFruitData(area);
 
 	courseplay.fields.fieldData[vehicle.cp.fieldEdge.customField.fieldNum] = data;
 	courseplay.fields.numAvailableFields = table.maxn(courseplay.fields.fieldData);
 
 	--print(string.format("\tfieldNum=%d, name=%s, #points=%d", courseplay.fields.fieldData[vehicle.cp.fieldEdge.customField.fieldNum].fieldNum, courseplay.fields.fieldData[vehicle.cp.fieldEdge.customField.fieldNum].name, #courseplay.fields.fieldData[vehicle.cp.fieldEdge.customField.fieldNum].points));
-
-	--SAVE TO XML
-	courseplay.fields:saveAllCustomFields();
 
 	--RESET
 	courseplay:setCustomFieldEdgePathNumber(vehicle, nil, 0);
@@ -1452,9 +1537,11 @@ end;
 
 -- INGAME MAP ICONS
 function courseplay:createMapHotspot(vehicle)
-	local name = 'cpDriver';
+	if vehicle.cp.mode == courseplay.MODE_COMBINE_SELF_UNLOADING then
+		return
+	end
+	local name = '';
 	if CpManager.ingameMapIconShowText then
-		name = '';
 		if CpManager.ingameMapIconShowName then
 			name = nameNum(vehicle, true) .. '\n';
 		end;
@@ -1463,16 +1550,37 @@ function courseplay:createMapHotspot(vehicle)
 		end;
 	end;
 
-	local iconPath = Utils.getFilename('img/hud.png', courseplay.path);
-	local x = vehicle.components[1].lastTranslation[1];
-	local y = vehicle.components[1].lastTranslation[3];
-	local h = 24 / 1080;
-	local w = h / g_screenAspectRatio;
-	vehicle.cp.ingameMapHotSpot = g_currentMission.ingameMap:createMapHotspot(name, iconPath, x, y, w, h, false, false, CpManager.ingameMapIconShowText, vehicle.rootNode, false, true);
-
-	if vehicle.cp.ingameMapHotSpot and vehicle.cp.ingameMapHotSpot.overlay then
-		courseplay.utils:setOverlayUVsPx(vehicle.cp.ingameMapHotSpot.overlay, courseplay.hud.ingameMapIconsUVs[vehicle.cp.mode], courseplay.hud.baseTextureSize.x, courseplay.hud.baseTextureSize.y);
-	end;
+	local hotspotX, _, hotspotZ = getWorldTranslation(vehicle.rootNode);
+	local _, textSize = getNormalizedScreenValues(0, 6);
+	local _, textOffsetY = getNormalizedScreenValues(0, 9.5);
+	local width, height = getNormalizedScreenValues(11,11);
+	local colour = Utils.getNoNil(courseplay.hud.ingameMapIconsUVs[vehicle.cp.mode], courseplay.hud.ingameMapIconsUVs[courseplay.MODE_GRAIN_TRANSPORT]);
+	vehicle.cp.ingameMapHotSpot = g_currentMission.ingameMap:createMapHotspot(
+		"cpHelper",                                 -- name: 				mapHotspot Name
+		"CP\n"..name,                               -- fullName: 			Text shown in icon
+		nil,                                        -- imageFilename:		Image path for custome images (If nil, then it will use Giants default image file)
+		getNormalizedUVs({768, 768, 256, 256}),     -- imageUVs:			UVs location of the icon in the image file. Use getNormalizedUVs to get an correct UVs array
+		colour,                                     -- baseColor:			What colour to show
+		hotspotX,                                   -- xMapPos:				x position of the hotspot on the map
+		hotspotZ,                                   -- zMapPos:				z position of the hotspot on the map
+		width,                                      -- width:				Image width
+		height,                                     -- height:				Image height
+		false,                                      -- blinking:			If the hotspot is blinking (Like the icons do, when a great demands is active)
+		false,                                      -- persistent:			Do the icon needs to be shown even when outside map ares (Like Greatdemands are shown at the minimap edge if outside the minimap)
+		true,                                       -- showName:			Should we show the fullName or not.
+		vehicle.components[1].node,                 -- objectId:			objectId to what the hotspot is attached to
+		true,                                       -- renderLast:			Does this need to be renderes as one of the last icons
+		MapHotspot.CATEGORY_VEHICLE_STEERABLE,      -- category:			The MapHotspot category.
+		textSize,                                   -- textSize:			fullName text size. you can use getNormalizedScreenValues(x, y) to get the normalized text size by using the return value of the y.
+		textOffsetY,                                -- textOffsetY:			Text offset horizontal
+		{1, 1, 1, 1},                               -- textColor:			Text colour (r, g, b, a) in 0-1 format
+		nil,                                        -- bgImageFilename:		Image path for custome background images (If nil, then it will use Giants default image file)
+		getNormalizedUVs({768, 768, 256, 256}),     -- bgImageUVs:			UVs location of the background icon in the image file. Use getNormalizedUVs to get an correct UVs array
+		Overlay.ALIGN_VERTICAL_MIDDLE,              -- verticalAlignment:	The alignment of the image based on the attached node
+		0.8                                         -- overlayBgScale:		Background icon scale, like making an border. (smaller is bigger border)
+	)
+	--- Do not delete this. This is for reference to what the arguments are.
+	-- IngameMap:createMapHotspot(name, fullName, imageFilename, imageUVs, baseColor, xMapPos, zMapPos, width, height, blinking, persistent, showName, objectId, renderLast, category, textSize, textOffsetY, textColor, bgImageFilename, bgImageUVs, verticalAlignment, overlayBgScale)
 end;
 function courseplay:deleteMapHotspot(vehicle)
 	if vehicle.cp.ingameMapHotSpot then
@@ -1481,7 +1589,16 @@ function courseplay:deleteMapHotspot(vehicle)
 	end;
 end;
 function courseplay:toggleIngameMapIconShowText()
-	CpManager.ingameMapIconShowText = not CpManager.ingameMapIconShowText;
+	if not CpManager.ingameMapIconShowName and not CpManager.ingameMapIconShowCourse then
+		CpManager.ingameMapIconShowName = true;
+	elseif CpManager.ingameMapIconShowName and not CpManager.ingameMapIconShowCourse then
+		CpManager.ingameMapIconShowCourse = true
+	else
+		CpManager.ingameMapIconShowName = false;
+		CpManager.ingameMapIconShowCourse = false
+	end
+	--TODO broadcast change to other Multiplayers
+	
 	-- for _,vehicle in pairs(g_currentMission.steerables) do
 	for _,vehicle in pairs(CpManager.activeCoursePlayers) do
 		if vehicle.cp.ingameMapHotSpot then

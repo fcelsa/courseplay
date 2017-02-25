@@ -1,5 +1,5 @@
 local curFile = 'combines.lua';
-
+local _;
 function courseplay:getAllCombines()
 	local combines = {}
 	for _, vehicle in pairs(courseplay.combines) do
@@ -101,8 +101,8 @@ function courseplay:registerAtCombine(callerVehicle, combine)
 	else
 		
 		if callerVehicle.cp.realisticDriving then
-			if combine.cp.wantsCourseplayer == true or combine.fillLevel >= combine.capacity then
-				courseplay:debug(string.format("%s: combine.cp.wantsCourseplayer(%s) or combine.fillLevel >= combine.capacity (%s)",nameNum(callerVehicle),tostring(combine.cp.wantsCourseplayer),tostring(combine.fillLevel >= 0.99*combine.capacity)),4)
+			if combine.cp.wantsCourseplayer == true or combine.cp.fillLevel >= combine.cp.capacity then
+				courseplay:debug(string.format("%s: combine.cp.wantsCourseplayer(%s) or combine.cp.fillLevel >= combine.cp.capacity (%s)",nameNum(callerVehicle),tostring(combine.cp.wantsCourseplayer),tostring(combine.cp.fillLevel >= 0.99*combine.cp.capacity)),4)
 			else
 				-- force unload when combine is full
 				-- is the pipe on the correct side?
@@ -196,8 +196,8 @@ function courseplay:registerAtCombine(callerVehicle, combine)
 	if #(combine.courseplayers) == numAllowedCourseplayers - 1 then
 		local frontTractor = combine.courseplayers[numAllowedCourseplayers - 1];
 		if frontTractor then
-			local canFollowFrontTractor = frontTractor.cp.tipperFillLevelPct and frontTractor.cp.tipperFillLevelPct >= callerVehicle.cp.followAtFillLevel;
-			courseplay:debug(string.format('%s: frontTractor (%s) fillLevelPct (%.1f), my followAtFillLevel=%d -> canFollowFrontTractor=%s', nameNum(callerVehicle), nameNum(frontTractor), frontTractor.cp.tipperFillLevelPct, callerVehicle.cp.followAtFillLevel, tostring(canFollowFrontTractor)), 4)
+			local canFollowFrontTractor = frontTractor.cp.totalFillLevelPercent and frontTractor.cp.totalFillLevelPercent >= callerVehicle.cp.followAtFillLevel;
+			courseplay:debug(string.format('%s: frontTractor (%s) fillLevelPct (%.1f), my followAtFillLevel=%d -> canFollowFrontTractor=%s', nameNum(callerVehicle), nameNum(frontTractor), frontTractor.cp.totalFillLevelPercent, callerVehicle.cp.followAtFillLevel, tostring(canFollowFrontTractor)), 4)
 			if not canFollowFrontTractor then
 				return false;
 			end;
@@ -310,9 +310,10 @@ function courseplay:calculateInitialCombineOffset(vehicle, combine) --TODO (Jako
 					rightMarker = cutter.aiRightMarker;
 					currentCutter = cutter;
 					if leftMarker ~= nil and rightMarker ~= nil then
-						local x, y, z = getWorldTranslation(currentCutter.rootNode);
-						combine.cp.lmX, _, _ = worldToLocal(leftMarker, x, y, z);
-						combine.cp.rmX, _, _ = worldToLocal(rightMarker, x, y, z);
+						local x, y, z = getWorldTranslation(leftMarker);
+						combine.cp.lmX, _, _ = worldToLocal(currentCutter.rootNode, x, y, z);
+						x, y, z = getWorldTranslation(rightMarker)						
+						combine.cp.rmX, _, _ = worldToLocal(currentCutter.rootNode, x, y, z);
 					end;
 				end;
 			end;
@@ -338,7 +339,7 @@ function courseplay:calculateInitialCombineOffset(vehicle, combine) --TODO (Jako
 		end;
 
 	-- combine // combine_offset is in auto mode
-	elseif not combine.cp.isChopper and combine.currentPipeState == 2 and combine.pipeRaycastNode ~= nil then -- pipe is extended
+	elseif not combine.cp.isChopper and combine.pipeCurrentState == 2 and combine.pipeRaycastNode ~= nil then -- pipe is extended
 		vehicle.cp.combineOffset = combineToPrnX;
 		courseplay:debug(string.format("%s(%i): %s @ %s: using combineToPrnX=%f, vehicle.cp.combineOffset=%f", curFile, debug.getinfo(1).currentline, nameNum(vehicle), tostring(combine.name), combineToPrnX, vehicle.cp.combineOffset), 4)
 	elseif not combine.cp.isChopper and combine.pipeRaycastNode ~= nil then -- pipe is closed
@@ -432,36 +433,15 @@ function courseplay:getSpecialCombineOffset(combine)
 		end
 	end
 	
-	if combine.cp.isCaseIH7130 then
-		return  8.0;
-	elseif combine.cp.isCaseIH9230Crawler then
-		return 11.5;
-	elseif combine.cp.isNewHollandTC590 then
-		return 5.1;
-	elseif combine.cp.isNewHollandCR1090 then
-		return 9.6;
-	elseif combine.cp.isSampoRosenlewC6 then
-		return 4.8;
-	elseif combine.cp.isGrimmeRootster604 then
-		return -4.3;
-	elseif combine.cp.isGrimmeSE260 then
-		return 4.2;
+	if combine.cp.isGrimmeRootster604 then
+		return -4.5,-4.5;
 	elseif combine.cp.isPoettingerMex5 then
-		combine.cp.offset = 5.9;
-		return 5.9;
-	elseif combine.cp.isKroneBigX1100 then
-		combine.cp.offset = 8.5;
-		return 8.5;
-	elseif combine.cp.isHolmerTerraDosT4_40 then
-		if combine.crabSteering.stateTarget == 2 then	
-			combine.cp.offset = 6.5;
-			return 6.5;
-		elseif combine.crabSteering.stateTarget < 2 then
-			combine.cp.offset = 4.6;
-			return 4.6;
-		end	
-	elseif combine.cp.isSugarBeetLoader then
-		local utwX,utwY,utwZ = getWorldTranslation(combine.unloadingTrigger.node);
+		return 5.5, 5.5;
+ 	end
+	
+	
+	if combine.cp.isSugarBeetLoader and combine.cp.isHolmerTerraFelis2 then
+		local utwX,utwY,utwZ = getWorldTranslation(combine.pipeRaycastNode);
 		local combineToUtwX,_,_ = worldToLocal(combine.cp.DirectionNode or combine.rootNode, utwX,utwY,utwZ);
 		return combineToUtwX;
 	end;
@@ -480,4 +460,30 @@ function courseplay:getCombinesPipeSide(combine)
 		combine.cp.pipeSide = -1; --right
 		--print("pipe is right")
 	end;
+end
+
+function courseplay:getTrailerInPipeRangeState(combine)
+        local validPipeState = 0;
+        for trailer,value in pairs(combine.overloading.trailersInRange) do
+            if value > 0 then
+				local fillType = combine.cp.fillType
+                if trailer:allowFillType(combine.cp.fillType) then
+					if trailer:getFillLevel(fillType) < trailer:getCapacity(fillType) then
+						validPipeState = 2;
+						break;
+					end
+                end
+            end
+        end
+		return validPipeState 
+end		
+		
+function courseplay:releaseCombineStop(vehicle,combine)
+	if combine == nil and vehicle.cp.activeCombine == nil then 
+		return 
+	end
+	local combineToStart = combine or vehicle.cp.activeCombine
+	if combineToStart.aiIsStarted and combineToStart.cruiseControl.speed == 0 then
+		combineToStart.cruiseControl.speed = combineToStart.cp.lastCruiseControlSpeed
+	end
 end

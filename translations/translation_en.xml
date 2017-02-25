@@ -7,7 +7,7 @@
 		<text name="COURSEPLAY_UNLOADING_DRIVER_STOP" 					 text="Stop driver" />
 		<text name="COURSEPLAY_STOP_AT_LAST_POINT" 						 text="Stop at last point or at next trigger" />
 		<text name="COURSEPLAY_UNLOADING_SIDE" 							 text="Driver side" />
-		<text name="COURSEPLAY_UNLOADING_SIDE_NONE" 					 text="automatic" />
+		<text name="COURSEPLAY_UNLOADING_SIDE_NONE" 					 text="Automatic" />
 		<text name="COURSEPLAY_LEFT" 									 text="left" />
 		<text name="COURSEPLAY_RIGHT" 									 text="right" />
 		<text name="COURSEPLAY_UNLOADING_DRIVER_SEND_HOME" 				 text="Send driver home" />
@@ -18,24 +18,35 @@
 		<text name="COURSEPLAY_MODE_1" 									 text="Type: Grain transport (Load at start)" />
 		<text name="COURSEPLAY_MODE_2" 									 text="Type: Combi (empty combine and offload)" />
 		<text name="COURSEPLAY_MODE_3" 									 text="Type: Overloader (empty combine and offload to trailer)" />
-		<text name="COURSEPLAY_MODE_4" 									 text="Type: fertilize and seeding" />
+		<text name="COURSEPLAY_MODE_4" 									 text="Type: Fertilize and seeding" />
 		<text name="COURSEPLAY_MODE_5" 									 text="Type: Transfer (drive from start to finish)" />
 		<text name="COURSEPLAY_MODE_6" 									 text="Type: Fieldwork" />
 		<text name="COURSEPLAY_MODE_7" 									 text="Type: Combine self-unloading" />
-		<text name="COURSEPLAY_MODE_8" 									 text="Type: Manure transporter" />
+		<text name="COURSEPLAY_MODE_8" 									 text="Type: Liquid product transport" />
 		<text name="COURSEPLAY_MODE_9" 									 text="Type: Fill and empty shovel" />
+		<text name="COURSEPLAY_MODE_10" 								 text="Type: Leveling and compacting" />
 		<text name="COURSEPLAY_CONTINUE" 								 text="continue" />
 		<text name="COURSEPLAY_CLEAR_COURSE" 							 text="Clear current course" />
 		<text name="COURSEPLAY_DRIVE_NOW" 								 text="Drive now" />
 		<text name="COURSEPLAY_DRIVE_ON_AT" 							 text="Drive on at:" />
 		<text name="UNKNOWN" 											 text="unknown" />
+		<text name="COURSEPLAY_HEADLAND_DIRECTION"						 text="Headland counter-/clockwise" />
+		<text name="COURSEPLAY_HEADLAND_BEFORE_AFTER"					 text="Headland before/after field course" />
+		<text name="COURSEPLAY_GENERATE_FIELD_COURSE"					 text="Generate field course" />
 		<text name="COURSEPLAY_DISTANCE" 								 text="distance" />
 		<text name="COURSEPLAY_WAITING_TIME" 							 text="Waiting time" />
 		<text name="COURSEPLAY_MINUTES" 								 text="%d min" />
 		<text name="COURSEPLAY_SECONDS" 								 text="%d sec" />
+		<text name="COURSEPLAY_UNIT_METER" 								 text="m" />
 		<text name="COURSEPLAY_COURSE_NAME" 							 text="Course name:" />
 		<text name="COURSEPLAY_FOLDER_NAME" 							 text="Folder name:" />
 		<text name="COURSEPLAY_FILTER_COURSES" 							 text="Filter courses:" />
+		<text name="COURSEPLAY_BUTTON_RETURN" 							 text="Return" />
+		<text name="COURSEPLAY_BUTTON_ESC" 								 text="ESC" />
+		<text name="COURSEPLAY_CANCEL_WITH" 							 text="%s to Cancel" />
+		<text name="COURSEPLAY_SAVE_COURSE_WITH" 						 text="%s to Save Course" />
+		<text name="COURSEPLAY_SAVE_FOLDER_NAME_WITH" 					 text="%s to Save Folder" />
+		<text name="COURSEPLAY_FILTER_COURSE_WITH" 						 text="%s to Filter Courses" />
 		<text name="COURSEPLAY_COURSES_FILTER_TITLE" 					 text="Courses: %q" />
 		<text name="COURSEPLAY_LOAD_COURSE" 						 	 text="Load course/merge into loaded course" />
 		<text name="COURSEPLAY_APPEND_COURSE" 						 	 text="Append course at the end" />
@@ -44,9 +55,12 @@
 		<text name="COURSEPLAY_CREATE_FOLDER" 							 text="Create new folder" />
 		<text name="COURSEPLAY_SEARCH_FOR_COURSES_AND_FOLDERS" 			 text="Search for courses and folders" />
 		<text name="COURSEPLAY_DEACTIVATE_FILTER" 						 text="Deactivate filter" />
-		<text name="COURSEPLAY_REACHED_OVERLOADING_POINT" 				 text="has reached overload point." />
+		<text name="COURSEPLAY_REACHED_OVERLOADING_POINT"				 text="has reached overload point." />
+		<text name="COURSEPLAY_SAVE_PIPE_POSITION" 					     text="save pipe position" /> 
+		<text name="COURSEPLAY_MOVE_PIPE_TO_POSITION"					 text= "move pipe to position" />
 		<text name="COURSEPLAY_REACHED_WAITING_POINT" 					 text="has reached waiting point" />
 		<text name="COURSEPLAY_REACHED_END_POINT" 						 text="has reached trigger/end point" />
+		<text name="COURSEPLAY_REACHED_END_POINT_MODE_1" 				 text="has finished grain transport." />
 		<text name="COURSEPLAY_WORK_END" 								 text="has finished work." />
 		<text name="COURSEPLAY_NEEDS_UNLOADING" 						 text=": work tool needs to be unloaded." />
 		<text name="COURSEPLAY_NEEDS_REFILLING" 						 text=": work tool needs to be refilled." />
@@ -58,6 +72,10 @@
 		<text name="COURSEPLAY_PATHFINDING" 							 text="Pathfinding" />
 		<text name="COURSEPLAY_COMBINE_OFFSET_HORIZONTAL" 				 text="Side offset:" />
 		<text name="COURSEPLAY_START_AT" 								 text="Start at:" />
+		<text name="COURSEPLAY_TURN_ON_FIELD"					 		 text="Turn on field:" />
+		<text name="COURSEPLAY_OPPOSITE_TURN_DIRECTION"			 		 text="Opposite turn direction:" />
+		<text name="COURSEPLAY_OPPOSITE_TURN_AT_END"			 		 text="last couple of lanes" />
+		<text name="COURSEPLAY_OPPOSITE_TURN_WHEN_POSSIBLE"		 		 text="when possible" />
 		<text name="COURSEPLAY_TURN_RADIUS" 							 text="Turning circle:" />
 		<text name="COURSEPLAY_COMBINE_OFFSET_VERTICAL" 				 text="Vertical offset:" />
 		<text name="COURSEPLAY_COMBINE" 								 text="Combine" />
@@ -141,6 +159,8 @@
 		<text name="COURSEPLAY_DIRECTION_4" 							 text="West" />
 		<text name="COURSEPLAY_HEADLAND" 								 text="Headland" />
 		<text name="COURSEPLAY_ACTIVATED" 								 text="activated" />
+		<text name="COURSEPLAY_NAME_ONLY" 								 text="Name only" />
+		<text name="COURSEPLAY_NAME_AND_COURSE" 						 text="Name and Course" />
 		<text name="COURSEPLAY_DEACTIVATED" 							 text="deactivated" />
 		<text name="COURSEPLAY_RIDGEMARKERS" 							 text="Ridge markers" />
 		<text name="COURSEPLAY_UNLOADING_ON_FIELD" 						 text="Unloading on field" />
@@ -200,7 +220,8 @@
 		<text name="COURSEPLAY_BGA_IS_FULL" 							 text=": Bunker silo is full!" />
 		<text name="COURSEPLAY_FARM_SILO_NO_FILLTYPE" 					 text="Farm silo doesn't have the selected fill type" />
 		<text name="COURSEPLAY_FARM_SILO_FILL_TYPE" 					 text="Farm silo load:" />
-		<text name="COURSEPLAY_FARM_SILO_IS_EMPTY" 						 text="Farm silo is empty!" />
+		<text name="COURSEPLAY_FARM_SILO_IS_EMPTY" 						 text="Farm silo is empty! Waiting for more." />
+		<text name="COURSEPLAY_FARM_SILO_IS_FULL" 						 text=": Farm silo is full! Continuing to next silo." />
 		<text name="COURSEPLAY_STARTING_UP_TOOL" 						 text="Starting up %s!" />
 		<text name="COURSEPLAY_SEARCH_FOR_FIRST_WAYPOINT" 				 text="Search for first waypoint" />
 		<text name="COURSEPLAY_SAVE_CURRENT_COURSE" 					 text="Save current course" />
@@ -209,6 +230,7 @@
 		<text name="COURSEPLAY_RECORDING_PAUSE_RESUME" 					 text="Resume the recording" />
 		<text name="COURSEPLAY_RECORDING_DELETE" 						 text="Delete the last waypoint" />
 		<text name="COURSEPLAY_RECORDING_SET_WAIT" 						 text="Set wait point" />
+		<text name="COURSEPLAY_RECORDING_SET_UNLOAD" 					 text="Set unload point" />
 		<text name="COURSEPLAY_RECORDING_SET_CROSS" 					 text="Set crossing point" />
 		<text name="COURSEPLAY_RECORDING_TURN_START" 					 text="Start turn maneuver" />
 		<text name="COURSEPLAY_RECORDING_TURN_END" 						 text="End turn maneuver" />
@@ -231,17 +253,41 @@
 		<text name="COURSEPLAY_HUD_OPEN" 								 text="Show Courseplay HUD" />
 		<text name="COURSEPLAY_HUD_CLOSE" 								 text="Hide Courseplay HUD" />
 		<text name="COURSEPLAY_FUNCTIONS" 								 text="Courseplay functions" />
-		<text name="COURSEPLAY_MODIFIER" 								 text="Courseplay: modifier" />
-		<text name="COURSEPLAY_MENU_ACCEPT_SECONDARY" 					 text="Courseplay: secondary menu accept" />
-		<text name="COURSEPLAY_HUD" 									 text="Show/hide Courseplay HUD" />
-		<text name="COURSEPLAY_START_STOP" 								 text="Courseplay: drive course/stop driver" />
-		<text name="COURSEPLAY_CANCELWAIT" 								 text="Courseplay: stop at last point or at next trigger" />
-		<text name="COURSEPLAY_DRIVENOW" 								 text="Courseplay: drive now" />
-		<text name="COURSEPLAY_NEXTMODE" 								 text="Courseplay: next mode" />
-		<text name="COURSEPLAY_PREVMODE" 								 text="Courseplay: previous mode" />
-		<text name="COURSEPLAY_MOUSEACTION_PRIMARY" 					 text="Courseplay: mouse action" />
-		<text name="COURSEPLAY_MOUSEACTION_SECONDARY" 					 text="Courseplay: secondary mouse action" />
+		<text name="input_COURSEPLAY_MODIFIER" 							 text="Courseplay: modifier" />
+		<text name="input_COURSEPLAY_MENU_ACCEPT_SECONDARY" 			 text="Courseplay: secondary menu accept" />
+		<text name="input_COURSEPLAY_HUD" 								 text="Show/hide Courseplay HUD" />
+		<text name="input_COURSEPLAY_START_STOP" 						 text="Courseplay: drive course/stop driver" />
+		<text name="input_COURSEPLAY_CANCELWAIT" 						 text="Courseplay: continue" />
+		<text name="input_COURSEPLAY_DRIVENOW" 							 text="Courseplay: drive now" />
+		<text name="input_COURSEPLAY_STOP_AT_END"						 text="Courseplay: stop at last point or at next trigger" />
+		<text name="input_COURSEPLAY_NEXTMODE" 							 text="Courseplay: next mode" />
+		<text name="input_COURSEPLAY_PREVMODE" 							 text="Courseplay: previous mode" />
+		<text name="input_COURSEPLAY_MOUSEACTION_PRIMARY" 				 text="Courseplay: mouse action" />
+		<text name="input_COURSEPLAY_MOUSEACTION_SECONDARY" 			 text="Courseplay: secondary mouse action" />
 		<text name="COURSEPLAY_MOUSEARROW_SHOW" 						 text="show mouse cursor" />
 		<text name="COURSEPLAY_MOUSEARROW_HIDE" 						 text="hide mouse cursor" />
+	
+		<text name="COURSEPLAY_MODE10_MODE" 						     text="mode" />
+		<text name="COURSEPLAY_MODE10_MODE_LEVELING" 					 text="leveling and compacting" />
+		<text name="COURSEPLAY_MODE10_MODE_BUILDUP"						 text="filling up" />
+		<text name="COURSEPLAY_MODE10_SEARCH_MODE" 						 text="automaticly stop for" />
+		<text name="COURSEPLAY_MODE10_SEARCH_MODE_CP" 					 text="just courseplayers" />
+		<text name="COURSEPLAY_MODE10_SEARCH_MODE_ALL" 					 text="all with running engine" />
+		<text name="COURSEPLAY_MODE10_SEARCHRADIUS" 					 text="detect tractors in range of " />
+		<text name="COURSEPLAY_MODE10_MAX_BUNKERSPEED" 					 text="max speed while pushing" />
+		<text name="COURSEPLAY_MODE10_BLADE_HEIGHT" 					 text="blade height" />
+		<text name="COURSEPLAY_MODE10_NOSILO"						 	 text="no bunkersilo detected at start point" />
+		<text name="COURSEPLAY_MODE10_NOBLADE"						 	 text="no blade attached" />
+		<text name="COURSEPLAY_MODE10_NOFRONTBLADE"						 text="front mounted blade is not supported" />
+		<text name="COURSEPLAY_MODE10_SETTINGS"						     text="BunkerSilo settings" />
+		<text name="COURSEPLAY_MODE10_BLADE_WIDTH" 					 	 text="blade width" />
+		<text name="COURSEPLAY_MODE10_SILO_LOADEDBY" 					 text="Silo is being filled by" />
+		<text name="COURSEPLAY_MODE10_DRIVINGTHROUGH" 					 text="driving through" />
+		<text name="COURSEPLAY_MODE10_REVERSE_UNLOADING" 			 	 text="reverse unloading" />
+		
+		<text name="COURSEPLAY_FUEL_SEARCH_FOR"						     text="Refill fuel at gas station" />
+		<text name="COURSEPLAY_FUEL_ALWAYS"						         text="always" />
+		<text name="COURSEPLAY_FUEL_BELOW_20PCT"						 text="below 20%" />
+		
 	</texts>
 </l10n>

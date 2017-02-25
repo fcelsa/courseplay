@@ -32,22 +32,8 @@ function courseplay:isFolding(workTool) --returns isFolding, isFolded, isUnfolde
 
 	local isFolding, isFolded, isUnfolded = false, true, true;
 	courseplay:debug(string.format('%s: isFolding(): realUnfoldDirection=%s, turnOnFoldDirection=%s, startAnimTime=%s, foldMoveDirection=%s', nameNum(workTool), tostring(workTool.cp.realUnfoldDirection), tostring(workTool.turnOnFoldDirection), tostring(workTool.startAnimTime), tostring(workTool.foldMoveDirection)), 17);
-
+	
 	for k,foldingPart in pairs(workTool.foldingParts) do
-		--local charSet = foldingPart.animCharSet;
-		--local animTime = charSet ~= 0 and getAnimTrackTime(charSet, 0) or workTool:getRealAnimationTime(foldingPart.animationName);
-
-		--isFolded/isUnfolded
-		--print(string.format('\tfoldingPart %d: animTime=%s, foldAnimTime=%s, isFoldedAnimTime=%s, isUnfoldedAnimTime=%s', k, tostring(animTime), tostring(workTool.foldAnimTime), tostring(foldingPart.isFoldedAnimTime),  tostring(foldingPart.isUnfoldedAnimTime)));
-		if workTool.foldAnimTime ~= foldingPart.isFoldedAnimTimeNormal then
-			isFolded = false;
-			courseplay:debug(string.format('\tfoldingPart %d: foldAnimTime=%s, isFoldedAnimTimeNormal=%s, isUnfoldedAnimTimeNormal=%s -> isFolded = false', k, tostring(workTool.foldAnimTime), tostring(foldingPart.isFoldedAnimTimeNormal),  tostring(foldingPart.isUnfoldedAnimTimeNormal)), 17);
-		end;
-		if workTool.foldAnimTime ~= foldingPart.isUnfoldedAnimTimeNormal then
-			isUnfolded = false;
-			courseplay:debug(string.format('\tfoldingPart %d: foldAnimTime=%s, isFoldedAnimTimeNormal=%s, isUnfoldedAnimTimeNormal=%s -> isUnfolded = false', k, tostring(workTool.foldAnimTime), tostring(foldingPart.isFoldedAnimTimeNormal),  tostring(foldingPart.isUnfoldedAnimTimeNormal)), 17);
-		end;
-
 		--isFolding
 		if workTool.oldFoldAnimTime == nil then workTool.oldFoldAnimTime = 0; end;
 		if workTool.foldAnimTime ~= workTool.oldFoldAnimTime then
@@ -58,11 +44,13 @@ function courseplay:isFolding(workTool) --returns isFolding, isFolded, isUnfolde
 			elseif workTool.foldMoveDirection < 0 and workTool.foldAnimTime > 0 then
 				isFolding = true;
 			end;
-
 			workTool.oldFoldAnimTime = workTool.foldAnimTime;
 		end;
 	end;
-
+	
+	isUnfolded = workTool:getIsUnfolded();
+	isFolded = not isUnfolded and not isFolding;
+	
 	courseplay:debug(string.format('\treturn isFolding=%s, isFolded=%s, isUnfolded=%s', tostring(isFolding), tostring(isFolded), tostring(isUnfolded)), 17);
 	return isFolding, isFolded, isUnfolded;
 end;
@@ -207,13 +195,10 @@ function courseplay:getVarValueFromString(self, str)
 end;
 
 function courseplay:boolToInt(bool)
-	if bool == nil or type(bool) ~= "boolean" then
-		return nil;
-	elseif bool == true then
+	if bool and type(bool) == 'boolean' then
 		return 1;
-	elseif bool == false then
-		return 0; 
 	end;
+	return;
 end;
 function courseplay:intToBool(int)
 	if int == nil or type(int) ~= "number" then
@@ -273,8 +258,8 @@ end;
 
 function courseplay:fillTypesMatch(fillTrigger, workTool)
 	if fillTrigger ~= nil then
-		if rawget(fillTrigger, 'fillType') then -- make sure the fillTrigger doesn't return a meta fillType from a parent class
-			return workTool:allowFillType(fillTrigger.fillType, false);
+		if fillTrigger.fillType then   --replaced rawget(fillTrigger, 'fillType') 
+			return workTool:allowFillType( fillTrigger.fillType , false);
 		elseif fillTrigger.currentFillType then
 			return workTool:allowFillType(fillTrigger.currentFillType, false);
 		elseif fillTrigger.getFillType then
@@ -631,122 +616,6 @@ function courseplay:getDriveDirection(node, x, y, z)
 	return lx,ly,lz
 end
 
--- TODO (Jakob) (FS15): move all UTF/normalization stuff to courseManagement.lua
---UTF-8: ALLOWED CHARACTERS and NORMALIZATION
---src: ASCII Table - Decimal (Base 10) Values @ http://www.parse-o-matic.com/parse/pskb/ASCII-Chart.htm
---src: http://en.wikipedia.org/wiki/List_of_Unicode_characters
-function courseplay:getAllowedCharacters()
-	local allowedSpan = { from = 32, to = 591 };
-	local prohibitedUnicodes = { [34] = true, [39] = true, [94] = true, [96] = true, [215] = true, [247] = true };
-	for unicode=127,190 do
-		prohibitedUnicodes[unicode] = true;
-	end;
-
-	local result = {};
-	for unicode=allowedSpan.from,allowedSpan.to do
-		prohibitedUnicodes[unicode] = prohibitedUnicodes[unicode] or false;
-		result[unicode] = not prohibitedUnicodes[unicode] and getCanRenderUnicode(unicode);
-		if courseplay.debugChannels and courseplay.debugChannels[8] and getCanRenderUnicode(unicode) then
-			print(string.format('allowedCharacters[%d]=%s (%q) (prohibited=%s, getCanRenderUnicode()=true)', unicode, tostring(result[unicode]), unicodeToUtf8(unicode), tostring(prohibitedUnicodes[unicode])));
-		end;
-	end;
-
-	return result;
-end;
-
-function courseplay:getUtf8normalization()
-	local result = {};
-
-	local normalizationSpans = {
-		a  = { {192,195}, 197, {224,227}, 229, {256,261} },
-		ae = { 196, 198, 228, 230 },
-		c  = { 199, 231, {262,269} },
-		d  = { {270,273} },
-		e  = { {200,203}, {232,235}, {274,283} },
-		g  = { {284,291} },
-		h  = { {292,295} },
-		i  = { {204,207}, {236,239}, {296,307} },
-		j  = { {308,309} },
-		k  = { {310,312} },
-		l  = { {313,322} },
-		n  = { 209, 241, {323,331} },
-		o  = { {210,213}, {242,245}, {332,337} },
-		oe = { 214, 216, 246, 248, 338, 339 },
-		r  = { {340,345} },
-		s  = { {346,353}, 383 },
-		ss = { 223 },
-		t  = { {354,359} },
-		u  = { {217,219}, {249,251}, {360,371} },
-		ue = { 220, 252 },
-		w  = { 372, 373 },
-		y  = { 221, 253, 255, {374,376} },
-		z  = { {377,382} }
-	};
-
-	--[[
-	local test = { 197, 229, 216, 248, 198, 230 };
-	for _,unicode in pairs(test) do
-		print(string.format("%q: getCanRenderUnicode(%d)=%s", unicodeToUtf8(unicode), unicode, tostring(getCanRenderUnicode(unicode))));
-	end;
-	]]
-
-	for normal,unicodes in pairs(normalizationSpans) do
-		for _,data in pairs(unicodes) do
-			if type(data) == "number" then
-				local utf8 = unicodeToUtf8(data);
-				result[utf8] = normal;
-				if false and getCanRenderUnicode(data) then
-					print(string.format("courseplay.utf8normalization[%q] = %q", utf8, normal));
-				end;
-			elseif type(data) == "table" then
-				for unicode=data[1],data[2] do
-					local utf8 = unicodeToUtf8(unicode);
-					result[utf8] = normal;
-					if false and getCanRenderUnicode(unicode) then
-						print(string.format("courseplay.utf8normalization[%q] = %q", utf8, normal));
-					end;
-				end;
-			end;
-		end;
-	end;
-
-	return result;
-end;
-
-
-function courseplay:normalizeUTF8_BAK(str)
-	local normal = str;
-	if str:len() ~= utf8Strlen(str) then --special char in str
-		courseplay:debug(string.format("%q: has special char, normal = %q", str, str:gsub("(..?)", courseplay.utf8normalization)), 8);
-		normal = str:gsub("(..?)", courseplay.utf8normalization);
-	end;
-
-	courseplay:debug(string.format("normalizeUTF8(%q): %q", str, normal), 8);
-	return normal:lower();
-end;
-
-
-function courseplay:normalizeUTF8(str)
-	local len = str:len();
-	local utfLen = utf8Strlen(str);
-	courseplay:debug(string.format("str %q: len=%d, utfLen=%d", str, len, utfLen), 8);
-
-	if len ~= utfLen then --special char in str
-		local result = "";
-		for i=0,utfLen-1 do
-			local char = utf8Substr(str,i,1);
-			courseplay:debug(string.format("\tchar=%q, replaceChar=%q", char, tostring(courseplay.utf8normalization[char])), 8);
-
-			local clean = courseplay.utf8normalization[char] or char:lower();
-			result = result .. clean;
-		end;
-		courseplay:debug(string.format("normalizeUTF8(%q) --> clean=%q", str, result), 8);
-		return result;
-	end;
-
-	return str:lower();
-end;
-
 function courseplay:checkAndPrintChange(vehicle, variable, VariableNameString)
 	if vehicle.cp.checkTable == nil then
 		vehicle.cp.checkTable = {}
@@ -830,6 +699,14 @@ function courseplay:loc(key)
 	return courseplay.locales[key] or key;
 end;
 
+function courseplay:getSpeedMeasuringUnit()
+	return g_i18n.globalI18N.useMiles and g_i18n:getText('unit_mph') or g_i18n:getText('unit_kmh');
+end
+
+function courseplay:getMeasuringUnit()
+	return g_i18n.globalI18N.useMiles and g_i18n:getText('unit_miles') or g_i18n:getText('unit_km');
+end
+
 function courseplay.utils:crossProductQuery(a, b, c, useC)
 	-- returns:
 	--	-1	vector from A to right intersects BC (except at the bottom end point)
@@ -890,10 +767,6 @@ end;
 
 function courseplay:getObjectName(object, xmlFile)
 	-- if object.name ~= nil the return object.name; end;
-
-	if object.cp and (object.cp.hasSpecializationPathVehicle or object.cp.hasSpecializationTrafficVehicle) then
-		return 'TrafficVehicle_' .. tostring(object.rootNode);
-	end;
 
 	if object.configFileName then
 		local storeItem = StoreItemsUtil.storeItemsByXMLFilename[object.configFileName:lower()];
@@ -1082,15 +955,6 @@ function courseplay.utils:move2dCoursePlotField(vehicle, mouseX, mouseY)
 
 	-- reset data
 	CpManager.course2dDragDropMouseDown = nil;
-
-	-- save new position data in xml
-	if g_server ~= nil then
-		local cpFile = loadXMLFile('cpFile', CpManager.cpXmlFilePath);
-		setXMLFloat(cpFile, 'XML.course2D#posX', CpManager.course2dPlotPosX);
-		setXMLFloat(cpFile, 'XML.course2D#posY', CpManager.course2dPlotPosY);
-		saveXMLFile(cpFile);
-		delete(cpFile);
-	end;
 end;
 
 function courseplay:setupCourse2dData(vehicle)
@@ -1120,11 +984,11 @@ function courseplay:setupCourse2dData(vehicle)
 
 	-- PDA MAP BG
 	if vehicle.cp.course2dPdaMapOverlay then
-		local leftX	  = bBox.xMin - bgPadding + g_statisticView.worldCenterOffsetX;
-		local bottomY = bBox.yMax + bgPadding + g_statisticView.worldCenterOffsetZ;
-		local rightX  = bBox.xMax + bgPadding + g_statisticView.worldCenterOffsetX;
-		local topY	  = bBox.yMin - bgPadding + g_statisticView.worldCenterOffsetZ;
-		courseplay.utils:setOverlayUVsPx(vehicle.cp.course2dPdaMapOverlay, { leftX, bottomY, rightX, topY }, g_statisticView.worldSizeX, g_statisticView.worldSizeZ);
+		local leftX	  = bBox.xMin - bgPadding + g_currentMission.ingameMap.worldCenterOffsetX;
+		local bottomY = bBox.yMax + bgPadding + g_currentMission.ingameMap.worldCenterOffsetZ;
+		local rightX  = bBox.xMax + bgPadding + g_currentMission.ingameMap.worldCenterOffsetX;
+		local topY	  = bBox.yMin - bgPadding + g_currentMission.ingameMap.worldCenterOffsetZ;
+		courseplay.utils:setOverlayUVsPx(vehicle.cp.course2dPdaMapOverlay, { leftX, bottomY, rightX, topY }, g_currentMission.ingameMap.worldSizeX, g_currentMission.ingameMap.worldSizeZ);
 
 		vehicle.cp.course2dPdaMapOverlay:setPosition(vehicle.cp.course2dBackground.x, vehicle.cp.course2dBackground.y);
 		vehicle.cp.course2dPdaMapOverlay:setDimension(vehicle.cp.course2dBackground.width, vehicle.cp.course2dBackground.height);
@@ -1134,7 +998,7 @@ function courseplay:setupCourse2dData(vehicle)
 	local epsilon = 2; -- orig: 0.001, also ok: 0.5
 	local reducedWaypoints = courseplay.utils:removeCollinearPoints(vehicle.Waypoints, epsilon);
 	local numReducedPoints = #reducedWaypoints;
-	-- print(('epsilon=%d -> #Waypoints=%d, #reducedWaypoints=%d'):format(epsilon, vehicle.cp.numWaypoints, numReducedPoints)); -- TODO delete print
+
 	local np, startX, startY, endX, endY, dx, dz, dx2D, dy2D, width, rotation, r, g, b;
 	for i,wp in ipairs(reducedWaypoints) do
 		np = i < numReducedPoints and reducedWaypoints[i + 1] or reducedWaypoints[1];
@@ -1243,3 +1107,51 @@ function courseplay.utils:rgbToNormal(r, g, b, a)
 
 	return { r/255, g/255, b/255 };
 end;
+
+function courseplay:sekToTimeFormat(numSec)
+	local nSeconds = numSec
+	local nHours = math.floor(nSeconds/3600);
+	local nMins = math.floor(nSeconds/60 - (nHours*60));
+	local nSecs = math.floor(nSeconds - nHours*3600 - nMins *60);
+	local timeTable = {}
+	if nSeconds == 0 then
+		timeTable = {
+					nHours = 0;
+					nMins = 0;
+					nSecs = 0;
+					}
+			return timeTable
+	end
+	timeTable = {
+					nHours = nHours;
+					nMins = nMins;
+					nSecs = nSecs;
+					
+					}
+	return timeTable	
+end
+
+function courseplay:startAIVehicle(oldFunction, helperIndex, noEventSend, more)
+    if self.cp and self.cp.isDriving and not self.cp.mode == 7 then
+		print(" starting helper while running Courseplay is not allowed")
+		return
+	end
+	if helperIndex ~= nil then
+        self.currentHelper = HelperUtil.helperIndexToDesc[helperIndex]
+    else
+        self.currentHelper = HelperUtil.getRandomHelper()
+    end
+
+    HelperUtil.useHelper(self.currentHelper)
+
+    g_currentMission.missionStats:updateStats("workersHired", 1);
+
+    if noEventSend == nil or noEventSend == false then
+        if g_server ~= nil then
+            g_server:broadcastEvent(AIVehicleSetStartedEvent:new(self, nil, true, self.currentHelper), nil, nil, self);
+        else
+            g_client:getServerConnection():sendEvent(AIVehicleSetStartedEvent:new(self, nil, true, self.currentHelper));
+        end
+    end
+    self:onStartAiVehicle();
+end

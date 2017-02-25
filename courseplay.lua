@@ -1,10 +1,10 @@
 --
 -- Courseplay
 --
--- @authors: Jakob Tischler / Thomas Gärtner / Satissis
--- @version: 4.00 beta
+-- @authors: Thomas Gärtner / Satissis
+-- @version: 5.00 beta
 -- @website: http://courseplay.github.io/courseplay/
--- @date:    2014
+-- @date:    2016
 -- @history: http://courseplay.github.io/courseplay/en/changelog/index.html
 --
 -- Copyright (C) 2014 Courseplay Dev Team
@@ -32,14 +32,13 @@ courseplay.fields = {};
 courseplay.generation = {};
 
 local sonOfaBangSonOfaBoom = {
-	['44d143f3e847254a55835a8298ba4e21'] = true;
-	['6fbb6a98a4054b1d603bd8c591d572af'] = true;
-	['87a96c3bb39fa285d7ed2fb5beaffc16'] = true;
-	['d4043d2f9265e18c794be4159faaef5c'] = true;
-	['f4a77acf03e969bbb2b99fee35d137fb'] = true;
-	['7fdd2fa7e858ae062946bbbc1143567c'] = true;
+	['56bb4a8d3f72d5a31aee0c317302dde5'] = true; -- Thomas
+	['9a9f028043394ff9de1cf6c905b515c1'] = true; -- Satis
+	['c8029c5126f522ec8839ec30fcabc22e'] = true; -- sKyDaNcEr
+	['06475174d922e7dcbb3ed34c0236dbdf'] = true; -- Justin
 };
-CpManager.isDeveloper = sonOfaBangSonOfaBoom[getMD5(g_settingsNickname)];
+CpManager.isDeveloper = sonOfaBangSonOfaBoom[getMD5(g_gameSettings:getValue("nickname"))];
+
 if CpManager.isDeveloper then
 	print('Special dev magic for Courseplay developer unlocked. You go, girl!');
 else
@@ -74,14 +73,15 @@ local function initialize()
 		'mode6', 
 		'mode7', 
 		'mode8', 
-		'mode9', 
+		'mode9',
+		'mode10',		
 		'recording', 
 		'reverse',
 		'settings', 
 		'signs', 
 		'specialTools', 
 		'start_stop', 
-		'tippers', 
+		'toolManager',
 		'triggers', 
 		'turn',
 		'vehicles'
@@ -134,7 +134,8 @@ local function setGlobalData()
 	courseplay.MODE_COMBINE_SELF_UNLOADING = 7;
 	courseplay.MODE_LIQUIDMANURE_TRANSPORT = 8;
 	courseplay.MODE_SHOVEL_FILL_AND_EMPTY = 9;
-	courseplay.NUM_MODES = 9;
+	courseplay.MODE_BUNKERSILO_COMPACTER = 10;
+	courseplay.NUM_MODES = 10;
 	------------------------------------------------------------
 
 

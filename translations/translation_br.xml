@@ -22,20 +22,31 @@
 		<text name="COURSEPLAY_MODE_5" 									 text="Tipo: Transferir (dirigir do início ao fim da rota)" />
 		<text name="COURSEPLAY_MODE_6" 									 text="Tipo: Trabalho no campo" />
 		<text name="COURSEPLAY_MODE_7" 									 text="Tipo: Ceifadeira descarrega" />
-		<text name="COURSEPLAY_MODE_8" 									 text="Tipo: Transporte de esterco" />
+		<text name="COURSEPLAY_MODE_8" 									 text="Type: Transporte de Liquidos" />  <!-- TODO: Retranslate to new name. -->
 		<text name="COURSEPLAY_MODE_9" 									 text="Tipo: Encher e esvaziar pá carregadeira" />
+		<text name="COURSEPLAY_MODE_10" 								 text="Type: leveling and compacting" />
 		<text name="COURSEPLAY_CONTINUE" 								 text="continua" />
 		<text name="COURSEPLAY_CLEAR_COURSE" 							 text="Limpar rota atual" />
 		<text name="COURSEPLAY_DRIVE_NOW" 								 text="Dirigir agora" />
 		<text name="COURSEPLAY_DRIVE_ON_AT" 							 text="Dirigir em:" />
 		<text name="UNKNOWN" 											 text="desconhecido" />
+		<text name="COURSEPLAY_HEADLAND_DIRECTION"						 text="Headland sentido horário/anti-horário" />        
+		<text name="COURSEPLAY_HEADLAND_BEFORE_AFTER"					 text="Headland antes/depois da rota" /> 
+		<text name="COURSEPLAY_GENERATE_FIELD_COURSE"					 text="Gerar rota no campo" />             
 		<text name="COURSEPLAY_DISTANCE" 								 text="distância" />
 		<text name="COURSEPLAY_WAITING_TIME" 							 text="Aguardando tempo" />
 		<text name="COURSEPLAY_MINUTES" 								 text="%d min" />
 		<text name="COURSEPLAY_SECONDS" 								 text="%d sec" />
+		<text name="COURSEPLAY_UNIT_METER" 								 text="metros" />           
 		<text name="COURSEPLAY_COURSE_NAME" 							 text="Nome da rota:" />
 		<text name="COURSEPLAY_FOLDER_NAME" 							 text="Nome da pasta:" />
 		<text name="COURSEPLAY_FILTER_COURSES" 							 text="Filtrar rotas:" />
+		<text name="COURSEPLAY_BUTTON_RETURN" 							 text="Enter" />					
+		<text name="COURSEPLAY_BUTTON_ESC" 								 text="tecla ESC" />						
+		<text name="COURSEPLAY_CANCEL_WITH" 							 text="%s para cancelar" />				
+		<text name="COURSEPLAY_SAVE_COURSE_WITH" 						 text="%s para salvar rota" />		
+		<text name="COURSEPLAY_SAVE_FOLDER_NAME_WITH" 					 text="%s para salvar pasta" />		
+		<text name="COURSEPLAY_FILTER_COURSE_WITH" 						 text="%s para salvar rotas" />		
 		<text name="COURSEPLAY_COURSES_FILTER_TITLE" 					 text="Rotas: %q" />
 		<text name="COURSEPLAY_LOAD_COURSE" 						 	 text="Carregar rota/mesclar na rota carragada" />
 		<text name="COURSEPLAY_APPEND_COURSE" 						 	 text="Adicionar rota no final" />
@@ -45,8 +56,11 @@
 		<text name="COURSEPLAY_SEARCH_FOR_COURSES_AND_FOLDERS" 			 text="Pesquisar por rotas e pastas" />
 		<text name="COURSEPLAY_DEACTIVATE_FILTER" 						 text="Desativar filtros" />
 		<text name="COURSEPLAY_REACHED_OVERLOADING_POINT" 				 text="chegou no ponto para carregar." />
+		<text name="COURSEPLAY_SAVE_PIPE_POSITION" 					     text="salvar a posição to tubo" />      
+		<text name="COURSEPLAY_MOVE_PIPE_TO_POSITION"					 text= "mover o tubo para posição" />	  
 		<text name="COURSEPLAY_REACHED_WAITING_POINT" 					 text="chegou no ponto de espera" />
 		<text name="COURSEPLAY_REACHED_END_POINT" 						 text="chegou no trigger ou no ponto final" />
+		<text name="COURSEPLAY_REACHED_END_POINT_MODE_1" 				 text="Finalizado transporte de grãos." />  
 		<text name="COURSEPLAY_WORK_END" 								 text="trabalho finalizado." />
 		<text name="COURSEPLAY_NEEDS_UNLOADING" 						 text=": equipamento precisa ser descarregado." />
 		<text name="COURSEPLAY_NEEDS_REFILLING" 						 text=": equipamento precisa ser recarregado." />
@@ -58,6 +72,10 @@
 		<text name="COURSEPLAY_PATHFINDING" 							 text="Evitar as plantações" />
 		<text name="COURSEPLAY_COMBINE_OFFSET_HORIZONTAL" 				 text="Distância horisontal:" />
 		<text name="COURSEPLAY_START_AT" 								 text="Iniciar rota em:" />
+		<text name="COURSEPLAY_TURN_ON_FIELD"					 		 text="Virar no campo:" />
+		<text name="COURSEPLAY_OPPOSITE_TURN_DIRECTION"			 		 text="Virar na direção oposta:" /> 
+		<text name="COURSEPLAY_OPPOSITE_TURN_AT_END"			 		 text="Ultima pista" />     
+		<text name="COURSEPLAY_OPPOSITE_TURN_WHEN_POSSIBLE"		 		 text="quando possível" />           
 		<text name="COURSEPLAY_TURN_RADIUS" 							 text="Raio de giro:" />
 		<text name="COURSEPLAY_COMBINE_OFFSET_VERTICAL" 				 text="Distância vertical:" />
 		<text name="COURSEPLAY_COMBINE" 								 text="Ceifadeira" />
@@ -141,6 +159,8 @@
 		<text name="COURSEPLAY_DIRECTION_4" 							 text="Oeste" />
 		<text name="COURSEPLAY_HEADLAND" 								 text="Cabeceira" />
 		<text name="COURSEPLAY_ACTIVATED" 								 text="ativado" />
+		<text name="COURSEPLAY_NAME_ONLY" 								 text="Somente nome" />            
+		<text name="COURSEPLAY_NAME_AND_COURSE" 						 text="Nome e rota" />		
 		<text name="COURSEPLAY_DEACTIVATED" 							 text="desativado" />
 		<text name="COURSEPLAY_RIDGEMARKERS" 							 text="marcador" />
 		<text name="COURSEPLAY_UNLOADING_ON_FIELD" 						 text="Descarregando no campo" />
@@ -200,7 +220,8 @@
 		<text name="COURSEPLAY_BGA_IS_FULL" 							 text=": Silo está cheio!" />
 		<text name="COURSEPLAY_FARM_SILO_NO_FILLTYPE" 					 text="Silo não selecionou o tipo de carregamento" />
 		<text name="COURSEPLAY_FARM_SILO_FILL_TYPE" 					 text="Carregando silo:" />
-		<text name="COURSEPLAY_FARM_SILO_IS_EMPTY" 						 text="Silo está vazio" />
+		<text name="COURSEPLAY_FARM_SILO_IS_EMPTY" 						 text="Silo está vazio! Esperando mais." />  
+		<text name="COURSEPLAY_FARM_SILO_IS_FULL" 						 text=": Silo está cheio! Continuar no proximo silo." />  
 		<text name="COURSEPLAY_STARTING_UP_TOOL" 						 text="Iniciando em %s!" />
 		<text name="COURSEPLAY_SEARCH_FOR_FIRST_WAYPOINT" 				 text="Pesquisar pelo primeiro ponto" />
 		<text name="COURSEPLAY_SAVE_CURRENT_COURSE" 					 text="Salvar rota atual" />
@@ -208,7 +229,8 @@
 		<text name="COURSEPLAY_RECORDING_PAUSE" 						 text="Pausar a gravação" />
 		<text name="COURSEPLAY_RECORDING_PAUSE_RESUME" 					 text="Retomar a gravação" />
 		<text name="COURSEPLAY_RECORDING_DELETE" 						 text="Excluir o último ponto" />
-		<text name="COURSEPLAY_RECORDING_SET_WAIT" 						 text="Definir ponto de espera" />
+		<text name="COURSEPLAY_RECORDING_SET_WAIT" 						 text="Definir parada de espera" />
+		<text name="COURSEPLAY_RECORDING_SET_UNLOAD" 					 text="Definir parada para descarregar" />
 		<text name="COURSEPLAY_RECORDING_SET_CROSS" 					 text="Definir ponto de cruzamento" />
 		<text name="COURSEPLAY_RECORDING_TURN_START" 					 text="Iniciar manobra de giro" />
 		<text name="COURSEPLAY_RECORDING_TURN_END" 						 text="Fim da manobra de giro" />
@@ -225,23 +247,47 @@
 		<text name="COURSEPLAY_SEEDUSAGECALCULATOR_USAGE" 				 text="Utilizado: %s %s (%s)" />
 		<text name="COURSEPLAY_SEEDUSAGECALCULATOR_TRIM" 				 text="···" />
 		<text name="COURSEPLAY_VISUALWAYPOINTS_STARTEND"				 text="Mostrar/ocultar início e fim" />
-		<text name="COURSEPLAY_VISUALWAYPOINTS_ALL"					 text="Mostrar/ocultar todos os pontos" />
+		<text name="COURSEPLAY_VISUALWAYPOINTS_ALL"						 text="Mostrar/ocultar todos os pontos" />
 		<text name="COURSEPLAY_VISUALWAYPOINTS_CROSSING"				 text="Mostrar/ocultar cruzamentos de pontos" />
 
 		<text name="COURSEPLAY_HUD_OPEN" 								 text="Mostrar Courseplay HUD" />
 		<text name="COURSEPLAY_HUD_CLOSE" 								 text="Ocultar Courseplay HUD" />
 		<text name="COURSEPLAY_FUNCTIONS" 								 text="Funções do Courseplay" />
-		<text name="COURSEPLAY_MODIFIER" 								 text="Courseplay: modificador" />
-		<text name="COURSEPLAY_MENU_ACCEPT_SECONDARY" 					 text="Courseplay: aceitar menu secundário" />
-		<text name="COURSEPLAY_HUD" 									 text="Mostrar/ocultar Courseplay HUD" />
-		<text name="COURSEPLAY_START_STOP" 								 text="Courseplay: dirigir/parar na rota" />
-		<text name="COURSEPLAY_CANCELWAIT" 								 text="Courseplay: parar no último ponto ou no próximo trigger" />
-		<text name="COURSEPLAY_DRIVENOW" 								 text="Courseplay: dirigir agora" />
-		<text name="COURSEPLAY_NEXTMODE" 								 text="Courseplay: próximo modo" /> 
-		<text name="COURSEPLAY_PREVMODE" 								 text="Courseplay: modo anterior" /> 
-		<text name="COURSEPLAY_MOUSEACTION_PRIMARY" 					 text="Courseplay: ações do mouse" />
-		<text name="COURSEPLAY_MOUSEACTION_SECONDARY" 					 text="Courseplay: ações secundárias do mouse" />
+		<text name="input_COURSEPLAY_MODIFIER" 							 text="Courseplay: modificador" />
+		<text name="input_COURSEPLAY_MENU_ACCEPT_SECONDARY" 			 text="Courseplay: aceitar menu secundário" />
+		<text name="input_COURSEPLAY_HUD" 								 text="Mostrar/ocultar Courseplay HUD" />
+		<text name="input_COURSEPLAY_START_STOP" 						 text="Courseplay: dirigir/parar na rota" />
+		<text name="input_COURSEPLAY_CANCELWAIT" 						 text="Courseplay: continue" />    <!-- TODO: TRANSLATE! -->
+		<text name="input_COURSEPLAY_DRIVENOW" 							 text="Courseplay: dirigir agora" />
+		<text name="input_COURSEPLAY_STOP_AT_END" 						 text="Courseplay: parar no último ponto ou no próximo trigger" />
+		<text name="input_COURSEPLAY_NEXTMODE" 							 text="Courseplay: próximo modo" />
+		<text name="input_COURSEPLAY_PREVMODE" 							 text="Courseplay: modo anterior" />
+		<text name="input_COURSEPLAY_MOUSEACTION_PRIMARY" 				 text="Courseplay: ações do mouse" />
+		<text name="input_COURSEPLAY_MOUSEACTION_SECONDARY" 			 text="Courseplay: ações secundárias do mouse" />
 		<text name="COURSEPLAY_MOUSEARROW_SHOW" 						 text="mostrar cursor do mouse" />
 		<text name="COURSEPLAY_MOUSEARROW_HIDE" 						 text="ocultar cursor do mouse" />
+	
+		<text name="COURSEPLAY_MODE10_MODE" 						     text="modo" />
+		<text name="COURSEPLAY_MODE10_MODE_LEVELING" 					 text="Nivelamento e Compactação" />
+		<text name="COURSEPLAY_MODE10_MODE_BUILDUP"						 text="Enchendo" />
+		<text name="COURSEPLAY_MODE10_SEARCH_MODE" 						 text="parada automática" />
+		<text name="COURSEPLAY_MODE10_SEARCH_MODE_CP" 					 text="pesquisar modo" />
+		<text name="COURSEPLAY_MODE10_SEARCH_MODE_ALL" 					 text="todos os motores funcionando" />
+		<text name="COURSEPLAY_MODE10_SEARCHRADIUS" 					 text="detectar tratores" />
+		<text name="COURSEPLAY_MODE10_MAX_BUNKERSPEED" 					 text="velocidade máxima enquanto compacta" />
+		<text name="COURSEPLAY_MODE10_BLADE_HEIGHT" 					 text="altura da lâmina" />
+		<text name="COURSEPLAY_MODE10_NOSILO"						 	 text="nenhum silo detectado no ponto inicial" />
+		<text name="COURSEPLAY_MODE10_NOBLADE"						 	 text="nenhuma lâmina conectada" />
+		<text name="COURSEPLAY_MODE10_NOFRONTBLADE"						 text="lâmina frontal não suportada" />
+		<text name="COURSEPLAY_MODE10_SETTINGS"						     text="Configuração do BunkerSilo" />
+		<text name="COURSEPLAY_MODE10_BLADE_WIDTH" 					 	 text="largura da lâmina" />
+		<text name="COURSEPLAY_MODE10_SILO_LOADEDBY" 					 text="Silo sendo preenchido por" />
+		<text name="COURSEPLAY_MODE10_DRIVINGTHROUGH" 					 text="dirigindo através" />
+		<text name="COURSEPLAY_MODE10_REVERSE_UNLOADING" 			 	 text="descarregar de ré" />
+		
+		<text name="COURSEPLAY_FUEL_SEARCH_FOR"						     text="Reabastecer o tanque de combustível" />
+		<text name="COURSEPLAY_FUEL_ALWAYS"						         text="sempre" />
+		<text name="COURSEPLAY_FUEL_BELOW_20PCT"						 text="abaixo de 20%" />
+		
 	</texts>
 </l10n>

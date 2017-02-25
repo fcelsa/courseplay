@@ -2,14 +2,27 @@ local curFile = 'start_stop.lua';
 
 -- starts driving the course
 function courseplay:start(self)
+	self.currentHelper = HelperUtil.getRandomHelper()
+
+	self.isHired = true;
+	self.isHirableBlocked = true;
+
+	self.cp.savedLightsMask  =  self.aiLightsTypesMask;
+	self.aiLightsTypesMask = nil; 
 	self.cp.forceIsActiveBackup = self.forceIsActive;
 	self.forceIsActive = true;
 	self.cp.stopMotorOnLeaveBackup = self.stopMotorOnLeave;
 	self.stopMotorOnLeave = false;
-	self.cp.deactivateOnLeaveBackup = self.deactivateOnLeave;
-	self.deactivateOnLeave = false;
 	self.steeringEnabled = false;
-	self.disableCharacterOnLeave = false
+	self.disableCharacterOnLeave = false;
+
+	if self.vehicleCharacter ~= nil then
+		self.vehicleCharacter:delete();
+		self.vehicleCharacter:loadCharacter(self.currentHelper.xmlFilename, getUserRandomizedMpColor(self.currentHelper.name))
+		if self.isEntered then
+			self.vehicleCharacter:setCharacterVisibility(false)
+		end
+	end
 
 	if courseplay.isClient then
 		return
@@ -20,7 +33,8 @@ function courseplay:start(self)
 		return
 	end
 	courseplay:setEngineState(self, true);
-	--print(tableShow(self.attachedImplements,"self.attachedImplements",nil,nil,4))
+
+	--print(tableShow(self.attachedImplements[1],"self.attachedImplements",nil,nil,4))
 	--local id = self.attachedImplements[1].object.unloadTrigger.triggerId
 	--courseplay:findInTables(g_currentMission ,"g_currentMission", id)
 
@@ -40,8 +54,10 @@ function courseplay:start(self)
 	courseplay:setRecordingIsPaused(self, false);
 	self.cp.calculatedCourseToCombine = false
 
-	AITractor.addCollisionTrigger(self, self);
-		
+	self.cp.backMarkerOffset = nil
+	self.cp.aiFrontMarker = nil
+	courseplay:resetTools(self)	
+	
 	if self.attachedCutters ~= nil then
 		for cutter, implement in pairs(self.attachedCutters) do
 			--remove cutter atTrafficCollisionTrigger in case of having changed or removed it while not in CP
@@ -71,12 +87,26 @@ function courseplay:start(self)
 	-- adapt collis height to vehicles height , its a runonce
 	if self.cp.ColliHeightSet == nil and self.cp.numTrafficCollisionTriggers > 0 then
 		local height = 0;
-		local step = self.sizeLength/2;
+		local step = (self.sizeLength/2)+1 ;
+		local stepBehind, stepFront = step, step;
+		if self.attachedImplements ~= nil then
+			for index, implement in pairs(self.attachedImplements) do
+				local tool = implement.object
+				local x,y,z = getWorldTranslation(tool.rootNode);
+			    local _,_,nz =  worldToLocal(self.cp.DirectionNode, x, y, z);
+				if nz > 0 then
+					stepFront = stepFront + (tool.sizeLength)+2				
+				else
+					stepBehind = stepBehind + (tool.sizeLength)+2	
+				end
+			end
+		end
+		
 		local distance = self.sizeLength;
 		local nx, ny, nz = localDirectionToWorld(self.rootNode, 0, -1, 0);	
 		self.cp.HeightsFound = 0;
 		self.cp.HeightsFoundColli = 0;			
-		for i=-step,step,0.5 do				
+		for i=-stepBehind,stepFront,0.5 do				
 			local x,y,z = localToWorld(self.rootNode, 0, distance, i);
 			raycastAll(x, y, z, nx, ny, nz, "findVehicleHeights", distance, self);
 			--print("drive raycast "..tostring(i).." end");
@@ -109,10 +139,8 @@ function courseplay:start(self)
 	--add to activeCoursePlayers
 	CpManager:addToActiveCoursePlayers(self);
 
-	self.cp.backMarkerOffset = nil
-	self.cp.aiFrontMarker = nil
 	self.cp.turnTimer = 8000
-	courseplay:reset_tools(self)
+	
 	-- show arrow
 	self:setCpVar('distanceCheck',true,courseplay.isClient);
 	-- current position
@@ -124,21 +152,29 @@ function courseplay:start(self)
 	
 
 	local setLaneNumber = false;
+	local isFrontAttached = false
 	for k,workTool in pairs(self.cp.workTools) do    --TODO temporary solution (better would be Tool:getIsAnimationPlaying(animationName))
 		if courseplay:isFolding(workTool) then
-			if  self.setAIImplementsMoveDown ~= nil then
-				self:setAIImplementsMoveDown(true)
+			if  self.aiLower ~= nil then
+				workTool:aiLower(true)
 			elseif self.setFoldState ~= nil then
 				self:setFoldState(-1, true)
 			end
 		end;
-
 		--DrivingLine spec: set lane numbers
 		if self.cp.mode == 4 and not setLaneNumber and workTool.cp.hasSpecializationDrivingLine and not workTool.manualDrivingLine then
 			setLaneNumber = true;
 		end;
+		if self.cp.mode == 10 then
+			local x,y,z = getWorldTranslation(workTool.rootNode)  
+			local _,_,tz = worldToLocal(self.cp.DirectionNode,x,y,z)
+			if tz > 0 then
+				isFrontAttached = true
+			end
+		end
 	end;
-
+	
+	self.cp.mode10.levelerIsFrontAttached = isFrontAttached
 
 	local mapIconPath = Utils.getFilename('img/mapWaypoint.png', courseplay.path);
 	local mapIconHeight = 2 / 1080;
@@ -150,6 +186,10 @@ function courseplay:start(self)
 	self.cp.shovelFillStartPoint = nil
 	self.cp.shovelFillEndPoint = nil
 	self.cp.shovelEmptyPoint = nil
+	self.cp.mode9SavedLastFillLevel = 0;
+	self.cp.workDistance = 0
+	self.cp.mediumWpDistance = 0
+	self.cp.mode10.alphaList = {}
 	local nearestpoint = dist
 	local recordNumber = 0
 	local curLaneNumber = 1;
@@ -180,14 +220,29 @@ function courseplay:start(self)
 		end;
 
 		-- specific Workzone
-		if self.cp.mode == 4 or self.cp.mode == 6 or self.cp.mode == 7 then
+		if self.cp.mode == 4 or self.cp.mode == 6 then
 			if numWaitPoints == 1 and (self.cp.startWork == nil or self.cp.startWork == 0) then
 				self.cp.startWork = i
 			end
 			if numWaitPoints > 1 and (self.cp.stopWork == nil or self.cp.stopWork == 0) then
 				self.cp.stopWork = i
 			end
-
+			if self.cp.startWork and not self.cp.stopWork then
+				if i > 1 then
+					local dist = courseplay:distance(cx, cz, self.Waypoints[i-1].cx, self.Waypoints[i-1].cz)
+					self.cp.workDistance = self.cp.workDistance + dist
+					self.cp.mediumWpDistance = self.cp.workDistance/i
+				end
+			end
+		elseif self.cp.mode == 7  then--combineUnloadMode
+			if numWaitPoints == 1 and (self.cp.startWork == nil or self.cp.startWork == 0) then
+				self.cp.startWork = i
+				self.cp.mode7makeHeaps = false
+			end
+			if numWaitPoints > 1 and (self.cp.stopWork == nil or self.cp.stopWork == 0) then
+				self.cp.stopWork = i
+				self.cp.mode7makeHeaps = true
+			end
 		--unloading point for transporter
 		elseif self.cp.mode == 8 then
 			--
@@ -213,12 +268,8 @@ function courseplay:start(self)
 			end;
 			wp.laneNum = curLaneNumber;
 		end;
-
-		-- ingame map course display
-		-- wp.ingameMapHotSpot = g_currentMission.ingameMap:createMapHotspot(nil, mapIconPath, wp.cx, wp.cz, mapIconWidth, mapIconHeight);
 	end; -- END for wp in self.Waypoints
-
-
+	
 	-- modes 4/6 without start and stop point, set them at start and end, for only-on-field-courses
 	if (self.cp.mode == 4 or self.cp.mode == 6) then
 		if numWaitPoints == 0 or self.cp.startWork == nil then
@@ -241,7 +292,7 @@ function courseplay:start(self)
 	if lookForNearestWaypoint then
 		local changed = false
 		for i=recordNumber,recordNumber+3 do
-			if self.Waypoints[i]~= nil and self.Waypoints[i].turn ~= nil then
+			if self.Waypoints[i]~= nil and self.Waypoints[i].turnStart then
 				courseplay:setWaypointIndex(self, i + 2);
 				changed = true
 				break
@@ -332,9 +383,10 @@ function courseplay:start(self)
 		end;
 	end;
 	
-	--check Crab Steering mode for HolmerDLC
-	if self.cp.isHolmerDlcCrabSteeringPossible and self.crabSteering.stateTarget > 1  then
-		self.cp.hasCrabSteeringActive = true;
+	--check Crab Steering mode and set it to default
+	if self.crabSteering and (self.crabSteering.state ~= self.crabSteering.aiSteeringModeIndex or self.cp.useCrabSteeringMode ~= nil) then
+		local crabSteeringMode = self.cp.useCrabSteeringMode or self.crabSteering.aiSteeringModeIndex;
+		self:setCrabSteering(crabSteeringMode);
 	end
 
 	-- ok i am near the waypoint, let's go
@@ -381,16 +433,26 @@ function courseplay:getCanUseCpMode(vehicle)
 			courseplay:setInfoText(vehicle, 'COURSEPLAY_WRONG_TOOL');
 		elseif mode == 9 then
 			courseplay:setInfoText(vehicle, 'COURSEPLAY_SHOVEL_NOT_FOUND');
+		elseif mode == 10 then
+			courseplay:setInfoText(vehicle, 'COURSEPLAY_MODE10_NOBLADE');
 		else
 			courseplay:setInfoText(vehicle, 'COURSEPLAY_WRONG_TRAILER');
 		end;
 		return false;
 	end;
+	
+	if mode == 10 and vehicle.cp.mode10.levelerIsFrontAttached then
+		courseplay:setInfoText(vehicle, 'COURSEPLAY_MODE10_NOFRONTBLADE');
+		return false;
+	end
 
 	local minWait, maxWait;
 
-	if mode == 3 or mode == 7 or mode == 8 then
+	if mode == 3 or mode == 8 or mode == 10 then
 		minWait, maxWait = 1, 1;
+		if  vehicle.cp.hasWaterTrailer then
+			maxWait = 10
+		end
 		if vehicle.cp.numWaitPoints < minWait then
 			courseplay:setInfoText(vehicle, string.format("COURSEPLAY_WAITING_POINTS_TOO_FEW;%d",minWait));
 			return false;
@@ -407,12 +469,17 @@ function courseplay:getCanUseCpMode(vehicle)
 			if vehicle.cp.workTools[1] == nil then
 				courseplay:setInfoText(vehicle, 'COURSEPLAY_WRONG_TRAILER');
 				return false;
-			elseif vehicle.cp.workTools[1].cp.isWaterTrailer and courseplay.triggers.waterReceiversCount == 0 then
-				courseplay:setInfoText(vehicle, 'There are no water triggers on this map'); -- TODO i18n
-				return false;
 			end;
 		end;
-
+	elseif mode == 7 then
+		minWait, maxWait = 1, 2;
+		if vehicle.cp.numWaitPoints < minWait then
+			courseplay:setInfoText(vehicle, string.format("COURSEPLAY_WAITING_POINTS_TOO_FEW;%d",minWait));
+			return false;
+		elseif vehicle.cp.numWaitPoints > maxWait then
+			courseplay:setInfoText(vehicle, string.format('COURSEPLAY_WAITING_POINTS_TOO_MANY;%d',maxWait));
+			return false;
+		end;	
 	elseif mode == 4 or mode == 6 then
 		if vehicle.cp.startWork == nil or vehicle.cp.stopWork == nil then
 			courseplay:setInfoText(vehicle, 'COURSEPLAY_NO_WORK_AREA');
@@ -453,20 +520,42 @@ end;
 
 -- stops driving the course
 function courseplay:stop(self)
+	self.isHired = false;
+	self.isHirableBlocked = false;
+	
+	self.aiLightsTypesMask = self.cp.savedLightsMask;
+	self.forceIsActive = self.cp.forceIsActiveBackup;
+	self.stopMotorOnLeave = self.cp.stopMotorOnLeaveBackup;
+	self.steeringEnabled = true;
+	self.disableCharacterOnLeave = true;
+
+	if self.vehicleCharacter ~= nil then
+		self.vehicleCharacter:delete();
+	end
+
+	if self.isEntered or self.isControlled then
+		if self.vehicleCharacter ~= nil then
+			----------------------------------
+			--- Fix Missing playerIndex and playerColorIndex that some times happens for unknow reasons
+			local playerIndex = Utils.getNoNil(self.playerIndex, g_currentMission.missionInfo.playerIndex);
+			local playerColorIndex = Utils.getNoNil(self.playerColorIndex, g_currentMission.missionInfo.playerColorIndex);
+			--- End Fix
+			----------------------------------
+
+			self.vehicleCharacter:loadCharacter(PlayerUtil.playerIndexToDesc[playerIndex].xmlFilename, playerColorIndex)
+			self.vehicleCharacter:setCharacterVisibility(not self.isEntered)
+		end
+	end;
+	self.currentHelper = nil
 
 	--stop special tools
 	for _, tool in pairs (self.cp.workTools) do
-							--  vehicle, workTool, unfold, lower, turnOn, allowedToDrive, cover, unload, ridgeMarker,forceSpeedLimit)
+		--  vehicle, workTool, unfold, lower, turnOn, allowedToDrive, cover, unload, ridgeMarker,forceSpeedLimit)
 		courseplay:handleSpecialTools(self, tool, false,   false,  false,   false, false, nil,nil,0);
 	end
 
-	
-	self.forceIsActive = self.cp.forceIsActiveBackup;
-	self.stopMotorOnLeave = self.cp.stopMotorOnLeaveBackup;
-	self.deactivateOnLeave = self.cp.deactivateOnLeaveBackup;
-	self.steeringEnabled = true;
-	self.disableCharacterOnLeave = true
 	self.cp.lastInfoText = nil
+
 	if courseplay.isClient then
 		return
 	end
@@ -490,6 +579,12 @@ function courseplay:stop(self)
 		self.cp.cruiseControlSpeedBackup = nil;
 	end;
 
+	courseplay:releaseCombineStop(self)
+	self.cp.BunkerSiloMap = nil
+	self.cp.mode9TargetSilo = nil
+	self.cp.mode10.lowestAlpha = 99
+	
+	
 	self:setCruiseControlState(Drivable.CRUISECONTROL_STATE_OFF)
 	self.cruiseControl.minSpeed = 1
 	self.cp.forcedToStop = false
@@ -499,21 +594,17 @@ function courseplay:stop(self)
 	if self.cp.modeState > 4 then
 		courseplay:setModeState(self, 1);
 	end
-	self.cp.turnStage = 0
-	self.cp.isTurning = nil
-	self.aiTractorTargetX = nil
-	self.aiTractorTargetZ = nil
-	self.aiTractorTargetBeforeTurnX = nil
-	self.aiTractorTargetBeforeTurnZ = nil
+	self.cp.isTurning = nil;
+	courseplay:clearTurnTargets(self);
 	self.cp.backMarkerOffset = nil
 	self.cp.aiFrontMarker = nil
 	self.cp.aiTurnNoBackward = false
 	self.cp.noStopOnEdge = false
 	self.cp.fillTrigger = nil;
+	self.cp.tipperLoadMode = 0;
 	self.cp.hasMachineToFill = false;
 	self.cp.unloadOrder = false
 	self.cp.isUnloadingStopped = false
-	AITractor.removeCollisionTrigger(self, self);
 	self.cpTrafficCollisionIgnoreList = {}
 	self.cp.foundColli = {}
 	self.cp.inTraffic = false
@@ -522,16 +613,17 @@ function courseplay:stop(self)
 	if self.beaconLightsActive then
 		self:setBeaconLightsVisibility(false);
 	end;
-	if self.turnSignalState and self.turnSignalState ~= Vehicle.TURNSIGNAL_OFF then
-		self:setTurnSignalState(Vehicle.TURNSIGNAL_OFF);
+	if self.turnLightState and self.turnLightState ~= Lights.TURNLIGHT_OFF then
+		self:setTurnLightState(Lights.TURNLIGHT_OFF);
 	end;
 
 	--open all covers
 	if self.cp.workToolAttached and self.cp.tipperHasCover and self.cp.mode == 1 or self.cp.mode == 2 or self.cp.mode == 5 or self.cp.mode == 6 then
-		courseplay:openCloseCover(self, nil, false);
+		courseplay:openCloseCover(self,60,false,false,true);
 	end;
 
 	-- resetting variables
+	self.cp.ColliHeightSet = nil
 	self.cp.tempCollis = {}
 	self.checkSpeedLimit = self.cp.savedCheckSpeedLimit;
 	courseplay:resetTipTrigger(self);
@@ -550,14 +642,17 @@ function courseplay:stop(self)
 	self.motor.maxRpmOverride = nil;
 	self.cp.startWork = nil
 	self.cp.stopWork = nil
+	self.cp.hasFinishedWork = nil
+	self.cp.turnTimeRecorded = nil;	
 	self.cp.hasUnloadingRefillingCourse = false;
 	self.cp.hasTransferCourse = false
 	courseplay:setStopAtEnd(self, false);
+	self.cp.stopAtEndMode1 = false;
+	self.cp.isTipping = false;
 	self.cp.isUnloaded = false;
 	self.cp.prevFillLevelPct = nil;
 	self.cp.isInRepairTrigger = nil;
 	self.cp.curMapWeightStation = nil;
-	self.cp.hasCrabSteeringActive = nil;
 	courseplay:setSlippingStage(self, 0);
 	courseplay:resetCustomTimer(self, 'slippingStage1');
 	courseplay:resetCustomTimer(self, 'slippingStage2');
@@ -566,12 +661,20 @@ function courseplay:stop(self)
 
 	self.cp.hasBaleLoader = false;
 	self.cp.hasPlough = false;
+	self.cp.hasRotateablePlough = false;
 	self.cp.hasSowingMachine = false;
 	self.cp.hasSprayer = false;
 	if self.cp.tempToolOffsetX ~= nil then
 		courseplay:changeToolOffsetX(self, nil, self.cp.tempToolOffsetX, true);
 		self.cp.tempToolOffsetX = nil
 	end;
+	if self.cp.manualWorkWidth ~= nil then
+		courseplay:changeWorkWidth(self, nil, self.cp.manualWorkWidth, true)
+		if self.cp.hud.currentPage == courseplay.hud.PAGE_COURSE_GENERATION then
+			courseplay.hud:setReloadPageOrder(self, self.cp.hud.currentPage, true);
+		end
+	end
+	
 	self.cp.totalLength, self.cp.totalLengthOffset = 0, 0;
 	self.cp.numWorkTools = 0;
 
@@ -608,20 +711,24 @@ end
 
 
 function courseplay:findVehicleHeights(transformId, x, y, z, distance)
-		local height = self.sizeLength - distance
-		local vehicle = false
-		if self.cp.trafficCollisionTriggerToTriggerIndex[transformId] ~= nil then
-			if self.cp.HeightsFoundColli < height then
-				self.cp.HeightsFoundColli = height
-			end	
-		elseif transformId == self.rootNode then
-			vehicle = true
-		elseif getParent(transformId) == self.rootNode and self.aiTrafficCollisionTrigger ~= transformId then
-			vehicle = true
+	local height = self.sizeLength - distance
+	local vehicle = false
+	--print(string.format("found %s (%s)",tostring(getName(transformId)),tostring(transformId)))
+	if self.cp.trafficCollisionTriggerToTriggerIndex[transformId] ~= nil then
+		if self.cp.HeightsFoundColli < height then
+			self.cp.HeightsFoundColli = height
 		end
-		if vehicle and self.cp.HeightsFound < height then
-			self.cp.HeightsFound = height
-		end	
-		
-		return true
+	elseif transformId == self.rootNode then
+		vehicle = true
+	elseif getParent(transformId) == self.rootNode and self.aiTrafficCollisionTrigger ~= transformId then
+		vehicle = true
+	elseif self.cpTrafficCollisionIgnoreList[transformId] or self.cpTrafficCollisionIgnoreList[getParent(transformId)] then
+		vehicle = true
+	end
+
+	if vehicle and self.cp.HeightsFound < height then
+		self.cp.HeightsFound = height
+	end
+
+	return true
 end

@@ -250,7 +250,7 @@ function courseplay:executeFunction(self, func, value, page)
 					courseplay:sendCourseplayerHome(combine);
 				elseif line == 4 and combine.cp.isChopper then
 					courseplay:switchCourseplayerSide(combine);
-				elseif line == 5 and combine.cp.isChopper and not self:getIsCourseplayDriving() and not self.isAIThreshing then --manual chopping: initiate/end turning maneuver
+				elseif line == 5 and combine.cp.isChopper and not self:getIsCourseplayDriving() and not self.aiIsStarted then --manual chopping: initiate/end turning maneuver
 					if self.cp.turnStage == 0 then
 						self.cp.turnStage = 1;
 					elseif self.cp.turnStage == 1 then
@@ -266,8 +266,6 @@ function courseplay:executeFunction(self, func, value, page)
 						courseplay:start(self);
 					elseif line == 3 and self.cp.mode ~= 9 then
 						courseplay:changeStartAtPoint(self);
-					elseif line == 6 and self.cp.mode == courseplay.MODE_GRAIN_TRANSPORT and self.cp.workTools[1] ~= nil and self.cp.workTools[1].allowFillFromAir and self.cp.workTools[1].allowTipDischarge then
-						self.cp.multiSiloSelectedFillType = courseplay:getNextFillableFillType(self);
 					end;
 
 				else -- driving
@@ -295,8 +293,6 @@ function courseplay:executeFunction(self, func, value, page)
 						end;
 					end;
 				end; -- end driving
-
-
 			elseif not self:getIsCourseplayDriving() then
 				if not self.cp.isRecording and not self.cp.recordingIsPaused and not self.cp.canDrive and self.cp.numWaypoints == 0 then
 					if line == 1 then
@@ -308,7 +304,33 @@ function courseplay:executeFunction(self, func, value, page)
 					end;
 				end;
 			end; --END if not self:getIsCourseplayDriving()
-		end; --END is page 0 or 1
+			if line == 5 then 
+				courseplay:getPipesRotation(self)
+			end
+			
+		elseif page == 3 then
+			if line == 1 then
+				self.cp.turnOnField = not self.cp.turnOnField;
+			end;
+			if line == 2 then
+				self.cp.oppositeTurnMode = not self.cp.oppositeTurnMode;
+			end;
+
+		elseif page == 10 then
+			if line == 1 and not self:getIsCourseplayDriving() then
+				courseplay:toggleMode10Mode(self)
+			elseif line == 2 then
+				courseplay:toggleMode10SearchMode(self)
+			elseif line == 5 then
+				courseplay:toggleMode10automaticSpeed(self)
+			elseif line == 6 then
+				if self.cp.mode10.leveling then
+					courseplay:toggleMode10AutomaticHeight(self)
+				end
+			elseif 	line == 7 then
+				courseplay:toggleMode10drivingThroughtLoading(self)
+			end 
+		end; --END is page 0 or 1 or 3 or 10
 	end; --END isRowFunction
 end;
 
@@ -337,7 +359,7 @@ function courseplay.inputBindings.updateInputButtonData()
 
 		-- print(('\t%s: inputName=%q'):format(type, inputName));
 
-		local txt = ('%s %s'):format(g_i18n:getText('mouse'), MouseHelper.getButtonNames(action.mouseButtons)); -- TODO (Jakob): getButtonNames returns English, not i18n text
+		local txt = ('%s %s'):format(g_i18n:getText('ui_mouse'), MouseHelper.getButtonNames(action.mouseButtons)); -- TODO (Jakob): getButtonNames returns English, not i18n text
 		courseplay.inputBindings.mouse[type .. 'TextI18n'] = txt;
 		courseplay.inputBindings.mouse[type .. 'ButtonId'] = mouseButtonId;
 		-- print(('\t\t%sTextI18n=%q, mouseButtonId=%d'):format(type, txt, mouseButtonId));
@@ -345,11 +367,11 @@ function courseplay.inputBindings.updateInputButtonData()
 		if type == 'secondary' then
 			local mouseButtonIdName = Input.mouseButtonIdToIdName[mouseButtonId];
 			local fileName = courseplay.inputBindings.mouse.mouseButtonOverlays[mouseButtonIdName] or 'mouseRMB.png';
-			-- print(('\t\tmouseButtonIdName=%q, fileName=%q'):format(tostring(mouseButtonIdName), tostring(fileName)));
+			 --print(('\t\tmouseButtonIdName=%q, fileName=%q'):format(tostring(mouseButtonIdName), tostring(fileName)));
 			if courseplay.inputBindings.mouse.overlaySecondary then
 				courseplay.inputBindings.mouse.overlaySecondary:delete();
 			end;
-			courseplay.inputBindings.mouse.overlaySecondary = Overlay:new('cpMouseIPB', 'dataS2/menu/controllerSymbols/mouse/' .. fileName, 0, 0, 0.0, 0.0);
+			courseplay.inputBindings.mouse.overlaySecondary = Overlay:new('cpMouseIPB', courseplay.path .. 'img/mouseIcons/' .. fileName, 0, 0, 0.0, 0.0);
 		end;
 	end;
 

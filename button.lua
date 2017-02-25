@@ -121,6 +121,9 @@ function courseplay.button:render()
 			if fn == "setCustomFieldEdgePathNumber" then
 				canScrollUp   = vehicle.cp.fieldEdge.customField.isCreated and vehicle.cp.fieldEdge.customField.fieldNum < courseplay.fields.customFieldMaxNum;
 				canScrollDown = vehicle.cp.fieldEdge.customField.isCreated and vehicle.cp.fieldEdge.customField.fieldNum > 0;
+			elseif fn == "changeSiloFillType" then
+				canScrollUp   = vehicle.cp.canDrive and not vehicle:getIsCourseplayDriving() and vehicle.cp.mode == courseplay.MODE_GRAIN_TRANSPORT and #vehicle.cp.easyFillTypeList > 0;
+				canScrollDown = vehicle.cp.canDrive and not vehicle:getIsCourseplayDriving() and vehicle.cp.mode == courseplay.MODE_GRAIN_TRANSPORT and #vehicle.cp.easyFillTypeList > 0;
 			end;
 
 		elseif pg == courseplay.hud.PAGE_MANAGE_COURSES then
@@ -194,6 +197,28 @@ function courseplay.button:render()
 				canScrollUp   = true;
 				canScrollDown = vehicle.cp.workWidth > 0.1;
 			end;
+			
+		elseif pg == courseplay.hud.PAGE_SHOVEL_POSITIONS then
+			if fn == "changeWorkWidth" then
+				canScrollUp   = true;
+				canScrollDown = vehicle.cp.workWidth > 0.1;
+			end
+			
+		elseif pg == courseplay.hud.PAGE_BUNKERSILO_SETTINGS then
+			if fn == "changeMode10Radius" then
+				canScrollUp   = true;
+				canScrollDown = vehicle.cp.mode10.searchRadius > 1;				
+			elseif fn == "changeShieldHeight" then
+				canScrollUp   = not vehicle.cp.mode10.automaticHeigth and vehicle.cp.mode10.shieldHeight < 1.5
+				canScrollDown = not vehicle.cp.mode10.automaticHeigth and vehicle.cp.mode10.shieldHeight > 0
+			elseif fn == "changeBunkerSpeed" then
+				local uMayUseIt = (vehicle.cp.mode10.leveling and not vehicle.cp.mode10.automaticSpeed) or not vehicle.cp.mode10.leveling
+				canScrollUp   = uMayUseIt and vehicle.cp.speeds.bunkerSilo < 20;
+				canScrollDown = uMayUseIt and vehicle.cp.speeds.bunkerSilo > 3;
+			elseif fn == "changeWorkWidth" then
+				canScrollUp   = true;
+				canScrollDown = vehicle.cp.workWidth > 0.1;
+			end
 		end;
 
 		if canScrollUp ~= nil then
@@ -206,14 +231,13 @@ function courseplay.button:render()
 	elseif self.overlay ~= nil then
 		if pg ~= -courseplay.hud.PAGE_MANAGE_COURSES then -- NOTE: course buttons' (page -2) visibility are handled in buttonsActiveEnabled(), section 'page2'
 			local show = true;
-
 			-- CONDITIONAL DISPLAY
 			-- Global
 			if pg == "global" then
 				if fn == "showSaveCourseForm" and prm == "course" then
 					show = vehicle.cp.canDrive and not vehicle.cp.isRecording and not vehicle.cp.recordingIsPaused and vehicle.Waypoints ~= nil and vehicle.cp.numWaypoints ~= 0;
 				end;
-
+				
 			-- Page 1
 			elseif pg == courseplay.hud.PAGE_CP_CONTROL then
 				if fn == "setCpMode" then
@@ -228,10 +252,14 @@ function courseplay.button:render()
 					end;
 				elseif fn == 'toggleFindFirstWaypoint' then
 					show = vehicle.cp.canDrive and not vehicle:getIsCourseplayDriving() and not vehicle.cp.isRecording and not vehicle.cp.recordingIsPaused;
-				elseif fn == 'stop_record' or fn == 'setRecordingPause' or fn == 'delete_waypoint' or fn == 'set_waitpoint' or fn == 'set_crossing' or fn == 'setRecordingTurnManeuver' or fn == 'change_DriveDirection' or fn == 'addSplitRecordingPoints' then
+				elseif fn == 'stop_record' or fn == 'setRecordingPause' or fn == 'delete_waypoint' or fn == 'set_waitpoint' or   fn == 'set_unloadPoint' or  fn == 'set_crossing' or fn == 'setRecordingTurnManeuver' or fn == 'change_DriveDirection' or fn == 'addSplitRecordingPoints' then
 					show = vehicle.cp.isRecording or vehicle.cp.recordingIsPaused;
 				elseif fn == 'clearCurrentLoadedCourse' then
 					show = vehicle.cp.canDrive and not vehicle.cp.isDriving;
+				elseif fn == 'changeSiloFillType' then
+					show = vehicle.cp.canDrive and not vehicle:getIsCourseplayDriving() and vehicle.cp.mode == courseplay.MODE_GRAIN_TRANSPORT and #vehicle.cp.easyFillTypeList > 0;
+				elseif fn == 'movePipeToPosition' then
+					show = not vehicle:getIsCourseplayDriving() and vehicle.cp.mode == courseplay.MODE_OVERLOADER ;
 				end;
 
 			-- Page 2
@@ -394,11 +422,32 @@ function courseplay.button:render()
 					end;
 				-- NOTE: generateCourse button is handled in buttonsActiveEnabled(), section 'generateCourse'
 				end;
+			-- Page 10
+			elseif pg == courseplay.hud.PAGE_BUNKERSILO_SETTINGS then
+				if fn == 'changeShieldHeight' then
+					show = (not vehicle.cp.mode10.automaticHeigth) and vehicle.cp.mode10.leveling			
+					if show and prm < 0 then
+						show = vehicle.cp.mode10.shieldHeight > 0;
+					end				
+				elseif fn == 'changeBunkerSpeed' then
+					show = (not vehicle.cp.mode10.automaticSpeed or not vehicle.cp.mode10.leveling)
+					if show then 
+						if prm < 0 then
+							show = vehicle.cp.speeds.bunkerSilo > 3
+						else
+							show = (vehicle.cp.speeds.bunkerSilo < 15 and vehicle.cp.mode10.leveling) or (vehicle.cp.speeds.bunkerSilo < 20 and not vehicle.cp.mode10.leveling)
+						end
+					end	
+				elseif fn == "changeWorkWidth" and prm < 0 then
+					show = vehicle.cp.workWidth > 0.1;
+				elseif fn == 'changeMode10Radius' then
+					if prm < 0 then
+						show = vehicle.cp.mode10.searchRadius > 1
+					end
+				end
 			end;
-
 			self:setShow(show);
 		end;
-
 
 
 		if self.show then
@@ -410,7 +459,13 @@ function courseplay.button:render()
 				hoverColor = 'closeRed';
 			end;
 
-			if fn == 'moveShovelToPosition' and not self.isDisabled and vehicle.cp.manualShovelPositionOrder and vehicle.cp.manualShovelPositionOrder == prm then  -- forced color
+			if fn == 'movePipeToPosition' then
+				if vehicle.cp.pipeWorkToolIndex ~= nil and vehicle.cp.manualPipePositionOrder then
+					targetColor = 'warningRed';
+				elseif vehicle.cp.pipeWorkToolIndex ~= nil then
+					targetColor = 'activeGreen';
+				end	
+			elseif fn == 'moveShovelToPosition' and not self.isDisabled and vehicle.cp.manualShovelPositionOrder and vehicle.cp.manualShovelPositionOrder == prm then  -- forced color
 				targetColor = 'warningRed';
 			elseif not self.isDisabled and not self.isActive and not self.isHovered and self.canBeClicked and not self.isClicked then
 				targetColor = 'white';
@@ -761,6 +816,17 @@ function courseplay.buttons:setActiveEnabled(vehicle, section)
 		end; -- for buttons
 		courseplay.settings.validateCourseListArrows(vehicle);
 
+	elseif vehicle.cp.hud.currentPage == 3 and anySection then
+		local isMode4or6 = vehicle.cp.mode == courseplay.MODE_SEED_FERTILIZE or vehicle.cp.mode == courseplay.MODE_FIELDWORK;
+		for _,button in pairs(vehicle.cp.buttons[3]) do
+			if (button.row == 1 or button.row == 2) and button.functionToCall == 'rowButton' then
+				button:setDisabled(not isMode4or6);
+				button:setShow(isMode4or6);
+				button:setActive(vehicle.cp.turnOnField);
+				button:setCanBeClicked(not button.isDisabled);
+			end;
+		end;
+
 	elseif vehicle.cp.hud.currentPage == 6 then
 		if anySection or section == 'debug' then
 			for _,button in pairs(vehicle.cp.buttons[6]) do
@@ -804,6 +870,6 @@ function courseplay.buttons:setActiveEnabled(vehicle, section)
 				button:setDisabled(not vehicle.cp.hasShovelStatePositions[button.parameter]);
 			end;
 		end;
-	end;
+	end;	
 end;
 
